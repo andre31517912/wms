@@ -17,6 +17,30 @@ export default async function AdminLayout({
             <Link href="/admin" className="text-sm font-semibold text-gray-900">
               WMS Admin
             </Link>
+            <Link
+              href="/admin/customers"
+              className="text-sm text-gray-600 hover:text-gray-900"
+            >
+              Customers
+            </Link>
+            <Link
+              href="/admin/categories"
+              className="text-sm text-gray-600 hover:text-gray-900"
+            >
+              Categories
+            </Link>
+            <Link
+              href="/admin/products"
+              className="text-sm text-gray-600 hover:text-gray-900"
+            >
+              Products
+            </Link>
+            <Link
+              href="/admin/import"
+              className="text-sm text-gray-600 hover:text-gray-900"
+            >
+              Import
+            </Link>
           </nav>
           <div className="flex items-center gap-4">
             <span className="text-sm text-gray-500">{admin.name}</span>

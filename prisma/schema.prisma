@@ -28,8 +28,71 @@ model User {
   createdAt     DateTime      @default(now()) @map("created_at")
   updatedAt     DateTime      @updatedAt @map("updated_at")
   sessions      Session[]
+  adjustments   StockAdjustment[]
 
   @@map("users")
+}
+
+enum AdjustmentReason {
+  RECEIVING
+  CORRECTION
+  DAMAGE
+  IMPORT
+  ORDER
+  ORDER_CANCELLED
+}
+
+model Category {
+  id        String    @id @default(cuid())
+  nameEn    String?   @map("name_en")
+  nameZh    String?   @map("name_zh")
+  sortOrder Int       @default(0) @map("sort_order")
+  createdAt DateTime  @default(now()) @map("created_at")
+  products  Product[]
+
+  @@map("categories")
+}
+
+model Product {
+  id                String            @id @default(cuid())
+  categoryId        String            @map("category_id")
+  category          Category          @relation(fields: [categoryId], references: [id])
+  sku               String?
+  nameEn            String?           @map("name_en")
+  nameZh            String?           @map("name_zh")
+  detailEn          String?           @map("detail_en")
+  detailZh          String?           @map("detail_zh")
+  unitWeightG       Float?            @map("unit_weight_g")
+  piecesPerCase     Int               @map("pieces_per_case")
+  caseLengthCm      Float?            @map("case_length_cm")
+  caseWidthCm       Float?            @map("case_width_cm")
+  caseHeightCm      Float?            @map("case_height_cm")
+  minOrderCases     Int               @default(1) @map("min_order_cases")
+  stockCases        Int               @default(0) @map("stock_cases")
+  lowStockThreshold Int               @default(10) @map("low_stock_threshold")
+  isActive          Boolean           @default(true) @map("is_active")
+  createdAt         DateTime          @default(now()) @map("created_at")
+  updatedAt         DateTime          @updatedAt @map("updated_at")
+  adjustments       StockAdjustment[]
+
+  @@index([categoryId])
+  @@index([sku])
+  @@map("products")
+}
+
+model StockAdjustment {
+  id         String           @id @default(cuid())
+  productId  String           @map("product_id")
+  product    Product          @relation(fields: [productId], references: [id], onDelete: Cascade)
+  userId     String?          @map("user_id")
+  user       User?            @relation(fields: [userId], references: [id], onDelete: SetNull)
+  deltaCases Int              @map("delta_cases")
+  reason     AdjustmentReason
+  note       String?
+  createdAt  DateTime         @default(now()) @map("created_at")
+
+  @@index([productId, createdAt])
+  @@map("stock_adjustments")
 }
 
 model Session {
