@@ -1,36 +1,65 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# WMS — Warehouse Management & Ordering
 
-## Getting Started
+B2B ordering system for a disposable foodservice packaging distributor. Customers order **by the case**; inventory is tracked in cases. Bilingual (English/Chinese) product catalog.
 
-First, run the development server:
+## Stack
+
+Next.js 16 (App Router) · TypeScript · Prisma 7 · PostgreSQL 17 · Tailwind v4 · zod
+
+Auth is hand-rolled: bcrypt password hashes, DB-backed sessions, httpOnly cookies. Roles (`ADMIN` / `CUSTOMER`) and account approval status are enforced server-side on every route and action.
+
+## Prerequisites
+
+- Node.js 20.9+ (LTS recommended)
+- Docker Desktop (for the local Postgres database only — the app runs natively)
+
+## Setup
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone https://github.com/andre31517912/wms.git
+cd wms
+npm install
+cp .env.example .env        # then edit: generate a real SESSION_SECRET
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Generate a session secret:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Run (the full loop)
 
-## Learn More
+```bash
+docker compose up -d        # start Postgres 17 (persists in a named volume)
+npx prisma migrate dev      # apply migrations
+npx prisma db seed          # seed the admin user
+npm run dev                 # app on http://localhost:3000
+```
 
-To learn more about Next.js, take a look at the following resources:
+Seeded admin login: `admin@wms.local` / `ChangeMe123!` (override with `SEED_ADMIN_EMAIL` / `SEED_ADMIN_PASSWORD` env vars; **always** override in production).
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Reset the database
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+docker compose down -v      # drop the volume (all data!)
+docker compose up -d
+npx prisma migrate dev
+npx prisma db seed
+```
 
-## Deploy on Vercel
+Or without dropping the container: `npx prisma migrate reset` (re-applies migrations + reruns seed).
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Accounts & roles
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- **Self-registration**: new users register at `/register` and land in `PENDING` status — they can log in but only see an "awaiting approval" page until an admin approves them.
+- **Admin** (`/admin`): warehouse management — catalog, inventory, orders (built up over Phases 2–4).
+- **Customer** (`/catalog`): browse catalog and place orders by the case (Phase 3).
+
+## Project phases
+
+1. ✅ Skeleton + auth (scaffold, Docker Postgres, migrations, register/login/logout, roles)
+2. Catalog & inventory (admin CRUD, stock audit trail, Excel import)
+3. Customer catalog & cart (transactional order placement)
+4. Order management (status workflow, delivery dates)
+5. Hardening & deployment (tests, rate limiting, Vercel + Neon demo)
