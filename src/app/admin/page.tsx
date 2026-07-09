@@ -27,9 +27,9 @@ export default async function AdminDashboardPage() {
     { label: "Approved customers", value: customerCount, href: "/admin/customers" },
     { label: "Pending approvals", value: pendingCount, href: "/admin/customers", alert: pendingCount > 0 },
     { label: "Products", value: productCount, href: "/admin/products" },
-    { label: "Active items", value: itemCount, href: "/admin/items" },
-    { label: "Low stock", value: lowStockCount, href: "/admin/items", alert: lowStockCount > 0 },
-    { label: "Out of stock", value: outOfStockCount, href: "/admin/items", alert: outOfStockCount > 0 },
+    { label: "Active items", value: itemCount, href: "/admin/products" },
+    { label: "Low stock", value: lowStockCount, href: "/admin/products", alert: lowStockCount > 0 },
+    { label: "Out of stock", value: outOfStockCount, href: "/admin/products", alert: outOfStockCount > 0 },
   ];
 
   return (

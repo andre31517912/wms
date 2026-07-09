@@ -27,13 +27,7 @@ export default async function AdminLayout({
               href="/admin/products"
               className="text-sm text-gray-600 hover:text-gray-900"
             >
-              Products
-            </Link>
-            <Link
-              href="/admin/items"
-              className="text-sm text-gray-600 hover:text-gray-900"
-            >
-              Items
+              Products &amp; Items
             </Link>
             <Link
               href="/admin/import"
