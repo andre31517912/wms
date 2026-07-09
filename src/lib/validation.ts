@@ -27,44 +27,31 @@ const optionalPositiveNumber = z.preprocess(
   z.coerce.number().positive().nullable()
 );
 
-export const categorySchema = z
-  .object({
-    nameEn: optionalText(200),
-    nameZh: optionalText(200),
-    sortOrder: z.coerce.number().int().min(0).max(100000).default(0),
-  })
-  .refine((c) => c.nameEn || c.nameZh, {
-    message: "At least one name (English or Chinese) is required",
-    path: ["nameEn"],
-  });
+export const productSchema = z.object({
+  name: z.string().trim().min(1, "Name is required").max(200),
+  sortOrder: z.coerce.number().int().min(0).max(100000).default(0),
+});
 
-export const productSchema = z
-  .object({
-    categoryId: z.string().min(1, "Category is required"),
-    sku: optionalText(100),
-    nameEn: optionalText(300),
-    nameZh: optionalText(300),
-    detailEn: optionalText(500),
-    detailZh: optionalText(500),
-    unitWeightG: optionalPositiveNumber,
-    piecesPerCase: z.coerce
-      .number()
-      .int("Pieces per case must be a whole number")
-      .positive("Pieces per case is required"),
-    caseLengthCm: optionalPositiveNumber,
-    caseWidthCm: optionalPositiveNumber,
-    caseHeightCm: optionalPositiveNumber,
-    minOrderCases: z.coerce.number().int().positive().default(1),
-    lowStockThreshold: z.coerce.number().int().min(0).default(10),
-    isActive: z.coerce.boolean().default(true),
-  })
-  .refine((p) => p.nameEn || p.nameZh, {
-    message: "At least one product name (English or Chinese) is required",
-    path: ["nameEn"],
-  });
+export const itemSchema = z.object({
+  productId: z.string().min(1, "Product is required"),
+  sku: optionalText(100),
+  name: z.string().trim().min(1, "Item name is required").max(300),
+  detail: optionalText(500),
+  unitWeightG: optionalPositiveNumber,
+  piecesPerCase: z.coerce
+    .number()
+    .int("Pieces per case must be a whole number")
+    .positive("Pieces per case is required"),
+  caseLengthCm: optionalPositiveNumber,
+  caseWidthCm: optionalPositiveNumber,
+  caseHeightCm: optionalPositiveNumber,
+  minOrderCases: z.coerce.number().int().positive().default(1),
+  lowStockThreshold: z.coerce.number().int().min(0).default(10),
+  isActive: z.coerce.boolean().default(true),
+});
 
 export const stockAdjustmentSchema = z.object({
-  productId: z.string().min(1),
+  itemId: z.string().min(1),
   deltaCases: z.coerce
     .number()
     .int("Cases must be a whole number")

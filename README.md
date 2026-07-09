@@ -1,6 +1,8 @@
 # WMS — Warehouse Management & Ordering
 
-B2B ordering system for a disposable foodservice packaging distributor. Customers order **by the case**; inventory is tracked in cases. Bilingual (English/Chinese) product catalog.
+B2B ordering system for a disposable foodservice packaging distributor. Customers order **by the case**; inventory is tracked in cases.
+
+Terminology: a **Product** is a grouping/product line (e.g. "Sushi Containers"); an **Item** is the orderable SKU under a product, stocked and sold by the case.
 
 ## Stack
 
@@ -59,7 +61,7 @@ Or without dropping the container: `npx prisma migrate reset` (re-applies migrat
 ## Project phases
 
 1. ✅ Skeleton + auth (scaffold, Docker Postgres, migrations, register/login/logout, roles)
-2. Catalog & inventory (admin CRUD, stock audit trail, Excel import)
+2. ✅ Catalog & inventory (admin CRUD, stock audit trail, Excel import)
 3. Customer catalog & cart (transactional order placement)
 4. Order management (status workflow, delivery dates)
 5. Hardening & deployment (tests, rate limiting, Vercel + Neon demo)

@@ -2,7 +2,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 
 export default async function AdminDashboardPage() {
-  const [customerCount, pendingCount, productCount, categoryCount, products] =
+  const [customerCount, pendingCount, itemCount, productCount, items] =
     await Promise.all([
       prisma.user.count({
         where: { role: "CUSTOMER", accountStatus: "APPROVED" },
@@ -10,26 +10,26 @@ export default async function AdminDashboardPage() {
       prisma.user.count({
         where: { role: "CUSTOMER", accountStatus: "PENDING" },
       }),
-      prisma.product.count({ where: { isActive: true } }),
-      prisma.category.count(),
-      prisma.product.findMany({
+      prisma.item.count({ where: { isActive: true } }),
+      prisma.product.count(),
+      prisma.item.findMany({
         where: { isActive: true },
         select: { stockCases: true, lowStockThreshold: true },
       }),
     ]);
 
-  const lowStockCount = products.filter(
-    (p) => p.stockCases > 0 && p.stockCases <= p.lowStockThreshold
+  const lowStockCount = items.filter(
+    (i) => i.stockCases > 0 && i.stockCases <= i.lowStockThreshold
   ).length;
-  const outOfStockCount = products.filter((p) => p.stockCases <= 0).length;
+  const outOfStockCount = items.filter((i) => i.stockCases <= 0).length;
 
   const cards: { label: string; value: number; href: string; alert?: boolean }[] = [
     { label: "Approved customers", value: customerCount, href: "/admin/customers" },
     { label: "Pending approvals", value: pendingCount, href: "/admin/customers", alert: pendingCount > 0 },
-    { label: "Active products", value: productCount, href: "/admin/products" },
-    { label: "Categories", value: categoryCount, href: "/admin/categories" },
-    { label: "Low stock", value: lowStockCount, href: "/admin/products", alert: lowStockCount > 0 },
-    { label: "Out of stock", value: outOfStockCount, href: "/admin/products", alert: outOfStockCount > 0 },
+    { label: "Products", value: productCount, href: "/admin/products" },
+    { label: "Active items", value: itemCount, href: "/admin/items" },
+    { label: "Low stock", value: lowStockCount, href: "/admin/items", alert: lowStockCount > 0 },
+    { label: "Out of stock", value: outOfStockCount, href: "/admin/items", alert: outOfStockCount > 0 },
   ];
 
   return (

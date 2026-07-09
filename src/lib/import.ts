@@ -4,17 +4,16 @@ import * as XLSX from "xlsx";
  * Tolerant parser for the client's ordering sheet (XLSX or CSV).
  * Headers are matched case/space-insensitively against English and Chinese
  * aliases so the client's existing sheet needs little or no reshaping.
+ * Sheets with separate Chinese/English name columns still parse — the
+ * Chinese value wins when both are present (single-name model).
  */
 
 export type ImportRow = {
   rowNumber: number;
-  categoryEn: string | null;
-  categoryZh: string | null;
+  productName: string | null; // grouping (formerly "category")
   sku: string | null;
-  nameEn: string | null;
-  nameZh: string | null;
-  detailEn: string | null;
-  detailZh: string | null;
+  name: string | null;
+  detail: string | null;
   unitWeightG: number | null;
   piecesPerCase: number | null;
   caseLengthCm: number | null;
@@ -29,14 +28,29 @@ export type ParseResult = {
   errors: string[];
 };
 
-const HEADER_ALIASES: Record<keyof Omit<ImportRow, "rowNumber">, string[]> = {
-  categoryEn: ["categoryen", "category", "categoryenglish"],
-  categoryZh: ["categoryzh", "分类", "类别", "类目", "categorychinese"],
+type NumericField =
+  | "unitWeightG" | "piecesPerCase" | "caseLengthCm" | "caseWidthCm"
+  | "caseHeightCm" | "minOrderCases" | "stockCases";
+
+// Order within each list = priority (first non-empty match wins per row)
+const TEXT_ALIASES: Record<
+  "productName" | "sku" | "name" | "detail",
+  string[]
+> = {
+  productName: [
+    "product", "productname", "分类", "类别", "类目",
+    "category", "categoryzh", "categoryen", "categorychinese", "categoryenglish",
+  ],
   sku: ["sku", "code", "productcode", "itemcode", "货号", "编号", "编码", "型号"],
-  nameEn: ["nameen", "name", "productname", "englishname", "英文名", "英文品名"],
-  nameZh: ["namezh", "chinesename", "中文名", "品名", "产品名称", "名称", "中文品名"],
-  detailEn: ["detailen", "detail", "description", "specification", "spec"],
-  detailZh: ["detailzh", "规格", "描述", "备注"],
+  // Chinese name columns first so they win when a sheet has both
+  name: [
+    "品名", "中文品名", "中文名", "产品名称", "名称", "namezh", "chinesename",
+    "name", "itemname", "nameen", "englishname", "英文名", "英文品名",
+  ],
+  detail: ["规格", "detailzh", "描述", "备注", "detail", "detailen", "description", "specification", "spec"],
+};
+
+const NUMBER_ALIASES: Record<NumericField, string[]> = {
   unitWeightG: ["unitweightg", "weightg", "weight", "unitweight", "克重", "重量", "单重"],
   piecesPerCase: [
     "piecespercase", "pcspercase", "pcscase", "pcs", "qtypercase", "casepack",
@@ -54,10 +68,7 @@ const COMBINED_DIMS_ALIASES = [
 ];
 
 function normalizeHeader(h: string): string {
-  return h
-    .toLowerCase()
-    .replace(/[\s_\-()（）.:：/\\]/g, "")
-    .replace(/cm$/, "cm"); // keep trailing cm meaningful
+  return h.toLowerCase().replace(/[\s_\-()（）.:：/\\]/g, "");
 }
 
 function toText(v: unknown): string | null {
@@ -75,18 +86,15 @@ function toNumber(v: unknown): number | null {
 /** Parse "60x40x30", "60*40*30", "60×40×30" (cm) into L/W/H. */
 function parseCombinedDims(
   v: unknown
-): { l: number | null; w: number | null; h: number | null } | null {
+): { l: number; w: number; h: number } | null {
   const s = toText(v);
   if (!s) return null;
-  const m = s.match(
-    /([\d.]+)\s*[x×*]\s*([\d.]+)\s*[x×*]\s*([\d.]+)/i
-  );
+  const m = s.match(/([\d.]+)\s*[x×*]\s*([\d.]+)\s*[x×*]\s*([\d.]+)/i);
   if (!m) return null;
   return { l: Number(m[1]), w: Number(m[2]), h: Number(m[3]) };
 }
 
 export function parseSheet(buffer: Buffer): ParseResult {
-  const errors: string[] = [];
   let workbook: XLSX.WorkBook;
   try {
     workbook = XLSX.read(buffer, { type: "buffer" });
@@ -105,61 +113,68 @@ export function parseSheet(buffer: Buffer): ParseResult {
     return { rows: [], errors: ["Sheet has no data rows"] };
   }
 
-  // Map actual headers -> our fields
-  const headerMap = new Map<string, keyof Omit<ImportRow, "rowNumber">>();
-  let combinedDimsHeader: string | null = null;
-  for (const header of Object.keys(raw[0])) {
-    const norm = normalizeHeader(header);
-    if (COMBINED_DIMS_ALIASES.includes(norm)) {
-      combinedDimsHeader = header;
-      continue;
-    }
-    for (const [field, aliases] of Object.entries(HEADER_ALIASES)) {
-      if (aliases.includes(norm)) {
-        headerMap.set(header, field as keyof Omit<ImportRow, "rowNumber">);
-        break;
-      }
-    }
+  // Map our fields -> matching sheet headers, in alias priority order
+  const headers = Object.keys(raw[0]);
+  const normalized = new Map(headers.map((h) => [normalizeHeader(h), h]));
+
+  function headersFor(aliases: string[]): string[] {
+    return aliases
+      .map((a) => normalized.get(a))
+      .filter((h): h is string => h !== undefined);
   }
 
-  const mappedFields = new Set(headerMap.values());
-  if (!mappedFields.has("nameEn") && !mappedFields.has("nameZh")) {
+  const textHeaders = Object.fromEntries(
+    Object.entries(TEXT_ALIASES).map(([f, a]) => [f, headersFor(a)])
+  ) as Record<keyof typeof TEXT_ALIASES, string[]>;
+  const numberHeaders = Object.fromEntries(
+    Object.entries(NUMBER_ALIASES).map(([f, a]) => [f, headersFor(a)])
+  ) as Record<NumericField, string[]>;
+  const combinedDimsHeader = headersFor(COMBINED_DIMS_ALIASES)[0];
+
+  if (textHeaders.name.length === 0) {
     return {
       rows: [],
       errors: [
-        `No product-name column recognized. Found headers: ${Object.keys(raw[0]).join(", ")}`,
+        `No item-name column recognized. Found headers: ${headers.join(", ")}`,
       ],
     };
   }
 
+  const errors: string[] = [];
   const rows: ImportRow[] = [];
+
   raw.forEach((r, i) => {
     const rowNumber = i + 2; // 1-based + header row
-    const row: ImportRow = {
-      rowNumber,
-      categoryEn: null, categoryZh: null, sku: null,
-      nameEn: null, nameZh: null, detailEn: null, detailZh: null,
-      unitWeightG: null, piecesPerCase: null,
-      caseLengthCm: null, caseWidthCm: null, caseHeightCm: null,
-      minOrderCases: null, stockCases: null,
+
+    const firstText = (hs: string[]) => {
+      for (const h of hs) {
+        const v = toText(r[h]);
+        if (v !== null) return v;
+      }
+      return null;
+    };
+    const firstNumber = (hs: string[]) => {
+      for (const h of hs) {
+        const v = toNumber(r[h]);
+        if (v !== null) return v;
+      }
+      return null;
     };
 
-    for (const [header, field] of headerMap) {
-      const value = r[header];
-      switch (field) {
-        case "unitWeightG":
-        case "piecesPerCase":
-        case "caseLengthCm":
-        case "caseWidthCm":
-        case "caseHeightCm":
-        case "minOrderCases":
-        case "stockCases":
-          row[field] = toNumber(value);
-          break;
-        default:
-          row[field] = toText(value);
-      }
-    }
+    const row: ImportRow = {
+      rowNumber,
+      productName: firstText(textHeaders.productName),
+      sku: firstText(textHeaders.sku),
+      name: firstText(textHeaders.name),
+      detail: firstText(textHeaders.detail),
+      unitWeightG: firstNumber(numberHeaders.unitWeightG),
+      piecesPerCase: firstNumber(numberHeaders.piecesPerCase),
+      caseLengthCm: firstNumber(numberHeaders.caseLengthCm),
+      caseWidthCm: firstNumber(numberHeaders.caseWidthCm),
+      caseHeightCm: firstNumber(numberHeaders.caseHeightCm),
+      minOrderCases: firstNumber(numberHeaders.minOrderCases),
+      stockCases: firstNumber(numberHeaders.stockCases),
+    };
 
     if (combinedDimsHeader) {
       const dims = parseCombinedDims(r[combinedDimsHeader]);
@@ -176,8 +191,8 @@ export function parseSheet(buffer: Buffer): ParseResult {
     );
     if (!hasAnyValue) return;
 
-    if (!row.nameEn && !row.nameZh) {
-      errors.push(`Row ${rowNumber}: no product name (English or Chinese)`);
+    if (!row.name) {
+      errors.push(`Row ${rowNumber}: no item name`);
       return;
     }
     if (row.piecesPerCase !== null && !Number.isInteger(row.piecesPerCase)) {

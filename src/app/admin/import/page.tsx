@@ -9,7 +9,7 @@ export default function ImportPage() {
       <p className="mb-6 text-sm text-gray-500">
         Upload the ordering sheet (.xlsx or .csv). Headers are matched
         flexibly in English or Chinese (品名, 货号, 装箱数, 克重, 库存...).
-        Existing products are matched by SKU (or name within category) and
+        Existing items are matched by SKU (or name within product) and
         updated; new ones are created. Always{" "}
         <strong>preview before importing</strong>.{" "}
         <a

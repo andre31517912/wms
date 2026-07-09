@@ -24,16 +24,16 @@ export default async function AdminLayout({
               Customers
             </Link>
             <Link
-              href="/admin/categories"
-              className="text-sm text-gray-600 hover:text-gray-900"
-            >
-              Categories
-            </Link>
-            <Link
               href="/admin/products"
               className="text-sm text-gray-600 hover:text-gray-900"
             >
               Products
+            </Link>
+            <Link
+              href="/admin/items"
+              className="text-sm text-gray-600 hover:text-gray-900"
+            >
+              Items
             </Link>
             <Link
               href="/admin/import"

@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { deleteProduct } from "../../actions";
+import { deleteItem } from "../../actions";
 
-export function DeleteProductButton({ productId }: { productId: string }) {
+export function DeleteItemButton({ itemId }: { itemId: string }) {
   const [arming, setArming] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
@@ -15,7 +15,7 @@ export function DeleteProductButton({ productId }: { productId: string }) {
         onClick={() => setArming(true)}
         className="rounded-lg border border-red-300 px-3 py-1.5 text-sm text-red-700 hover:bg-red-50"
       >
-        Delete product
+        Delete item
       </button>
     );
   }
@@ -28,7 +28,7 @@ export function DeleteProductButton({ productId }: { productId: string }) {
         disabled={pending}
         onClick={() =>
           startTransition(async () => {
-            const result = await deleteProduct(productId);
+            const result = await deleteItem(itemId);
             if (result && "error" in result) setError(result.error);
           })
         }

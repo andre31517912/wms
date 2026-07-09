@@ -18,6 +18,15 @@ enum AccountStatus {
   DISABLED
 }
 
+enum AdjustmentReason {
+  RECEIVING
+  CORRECTION
+  DAMAGE
+  IMPORT
+  ORDER
+  ORDER_CANCELLED
+}
+
 model User {
   id            String        @id @default(cuid())
   email         String        @unique
@@ -33,35 +42,25 @@ model User {
   @@map("users")
 }
 
-enum AdjustmentReason {
-  RECEIVING
-  CORRECTION
-  DAMAGE
-  IMPORT
-  ORDER
-  ORDER_CANCELLED
-}
-
-model Category {
-  id        String    @id @default(cuid())
-  nameEn    String?   @map("name_en")
-  nameZh    String?   @map("name_zh")
-  sortOrder Int       @default(0) @map("sort_order")
-  createdAt DateTime  @default(now()) @map("created_at")
-  products  Product[]
-
-  @@map("categories")
-}
-
+/// Product line / grouping (e.g. "Sushi Containers") — contains orderable items
 model Product {
+  id        String   @id @default(cuid())
+  name      String
+  sortOrder Int      @default(0) @map("sort_order")
+  createdAt DateTime @default(now()) @map("created_at")
+  items     Item[]
+
+  @@map("products")
+}
+
+/// Orderable SKU-level entry, stocked and sold by the case
+model Item {
   id                String            @id @default(cuid())
-  categoryId        String            @map("category_id")
-  category          Category          @relation(fields: [categoryId], references: [id])
+  productId         String            @map("product_id")
+  product           Product           @relation(fields: [productId], references: [id])
   sku               String?
-  nameEn            String?           @map("name_en")
-  nameZh            String?           @map("name_zh")
-  detailEn          String?           @map("detail_en")
-  detailZh          String?           @map("detail_zh")
+  name              String
+  detail            String?
   unitWeightG       Float?            @map("unit_weight_g")
   piecesPerCase     Int               @map("pieces_per_case")
   caseLengthCm      Float?            @map("case_length_cm")
@@ -75,15 +74,15 @@ model Product {
   updatedAt         DateTime          @updatedAt @map("updated_at")
   adjustments       StockAdjustment[]
 
-  @@index([categoryId])
+  @@index([productId])
   @@index([sku])
-  @@map("products")
+  @@map("items")
 }
 
 model StockAdjustment {
   id         String           @id @default(cuid())
-  productId  String           @map("product_id")
-  product    Product          @relation(fields: [productId], references: [id], onDelete: Cascade)
+  itemId     String           @map("item_id")
+  item       Item             @relation(fields: [itemId], references: [id], onDelete: Cascade)
   userId     String?          @map("user_id")
   user       User?            @relation(fields: [userId], references: [id], onDelete: SetNull)
   deltaCases Int              @map("delta_cases")
@@ -91,7 +90,7 @@ model StockAdjustment {
   note       String?
   createdAt  DateTime         @default(now()) @map("created_at")
 
-  @@index([productId, createdAt])
+  @@index([itemId, createdAt])
   @@map("stock_adjustments")
 }
 

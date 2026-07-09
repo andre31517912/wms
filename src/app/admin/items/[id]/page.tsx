@@ -1,10 +1,10 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { bilingual, stockLevel } from "@/lib/display";
-import { updateProduct } from "../../actions";
-import { ProductForm } from "../ProductForm";
+import { stockLevel } from "@/lib/display";
+import { updateItem } from "../../actions";
+import { ItemForm } from "../ItemForm";
 import { StockAdjustForm } from "./StockAdjustForm";
-import { DeleteProductButton } from "./DeleteProductButton";
+import { DeleteItemButton } from "./DeleteItemButton";
 
 const LEVEL_TEXT = {
   in_stock: ["In stock", "text-green-700"],
@@ -12,16 +12,16 @@ const LEVEL_TEXT = {
   out: ["Out of stock", "text-red-700"],
 } as const;
 
-export default async function ProductDetailPage(props: {
+export default async function ItemDetailPage(props: {
   params: Promise<{ id: string }>;
 }) {
   const { id } = await props.params;
 
-  const [product, categories] = await Promise.all([
-    prisma.product.findUnique({
+  const [item, products] = await Promise.all([
+    prisma.item.findUnique({
       where: { id },
       include: {
-        category: true,
+        product: true,
         adjustments: {
           orderBy: { createdAt: "desc" },
           take: 50,
@@ -29,35 +29,33 @@ export default async function ProductDetailPage(props: {
         },
       },
     }),
-    prisma.category.findMany({
+    prisma.product.findMany({
       orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
     }),
   ]);
-  if (!product) notFound();
+  if (!item) notFound();
 
-  const level = stockLevel(product.stockCases, product.lowStockThreshold);
+  const level = stockLevel(item.stockCases, item.lowStockThreshold);
   const [levelLabel, levelCls] = LEVEL_TEXT[level];
 
   return (
     <div className="max-w-4xl">
       <div className="mb-6 flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-gray-900">
-            {bilingual(product.nameZh, product.nameEn)}
-          </h1>
+          <h1 className="text-2xl font-semibold text-gray-900">{item.name}</h1>
           <p className="mt-1 text-sm text-gray-500">
-            {product.sku ? `SKU ${product.sku} · ` : ""}
-            {bilingual(product.category.nameZh, product.category.nameEn)}
+            {item.sku ? `SKU ${item.sku} · ` : ""}
+            {item.product.name}
           </p>
         </div>
-        <DeleteProductButton productId={product.id} />
+        <DeleteItemButton itemId={item.id} />
       </div>
 
       <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
         <div className="rounded-xl bg-white p-5 shadow-sm">
           <p className="text-sm text-gray-500">Current stock</p>
           <p className="mt-1 text-3xl font-semibold text-gray-900">
-            {product.stockCases}
+            {item.stockCases}
             <span className="ml-1 text-base font-normal text-gray-400">
               cases
             </span>
@@ -65,38 +63,29 @@ export default async function ProductDetailPage(props: {
           <p className={`mt-1 text-sm font-medium ${levelCls}`}>{levelLabel}</p>
         </div>
         <div className="rounded-xl bg-white p-5 shadow-sm sm:col-span-2">
-          <p className="mb-3 text-sm font-medium text-gray-700">
-            Adjust stock
-          </p>
-          <StockAdjustForm productId={product.id} />
+          <p className="mb-3 text-sm font-medium text-gray-700">Adjust stock</p>
+          <StockAdjustForm itemId={item.id} />
         </div>
       </div>
 
       <div className="mb-8 rounded-xl bg-white p-6 shadow-sm">
-        <h2 className="mb-4 text-lg font-medium text-gray-900">
-          Product details
-        </h2>
-        <ProductForm
-          action={updateProduct.bind(null, product.id)}
-          categories={categories.map((c) => ({
-            id: c.id,
-            label: bilingual(c.nameZh, c.nameEn),
-          }))}
+        <h2 className="mb-4 text-lg font-medium text-gray-900">Item details</h2>
+        <ItemForm
+          action={updateItem.bind(null, item.id)}
+          products={products.map((p) => ({ id: p.id, label: p.name }))}
           initial={{
-            categoryId: product.categoryId,
-            sku: product.sku,
-            nameEn: product.nameEn,
-            nameZh: product.nameZh,
-            detailEn: product.detailEn,
-            detailZh: product.detailZh,
-            unitWeightG: product.unitWeightG,
-            piecesPerCase: product.piecesPerCase,
-            caseLengthCm: product.caseLengthCm,
-            caseWidthCm: product.caseWidthCm,
-            caseHeightCm: product.caseHeightCm,
-            minOrderCases: product.minOrderCases,
-            lowStockThreshold: product.lowStockThreshold,
-            isActive: product.isActive,
+            productId: item.productId,
+            sku: item.sku,
+            name: item.name,
+            detail: item.detail,
+            unitWeightG: item.unitWeightG,
+            piecesPerCase: item.piecesPerCase,
+            caseLengthCm: item.caseLengthCm,
+            caseWidthCm: item.caseWidthCm,
+            caseHeightCm: item.caseHeightCm,
+            minOrderCases: item.minOrderCases,
+            lowStockThreshold: item.lowStockThreshold,
+            isActive: item.isActive,
           }}
           submitLabel="Save changes"
         />
@@ -106,7 +95,7 @@ export default async function ProductDetailPage(props: {
         <h2 className="border-b border-gray-100 px-6 py-4 text-lg font-medium text-gray-900">
           Stock history
         </h2>
-        {product.adjustments.length === 0 ? (
+        {item.adjustments.length === 0 ? (
           <p className="px-6 py-4 text-sm text-gray-500">
             No stock movements yet.
           </p>
@@ -122,7 +111,7 @@ export default async function ProductDetailPage(props: {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
-              {product.adjustments.map((a) => (
+              {item.adjustments.map((a) => (
                 <tr key={a.id}>
                   <td className="px-6 py-2 text-gray-500">
                     {a.createdAt.toLocaleString("en-CA", {

@@ -5,8 +5,8 @@ import { redirect } from "next/navigation";
 import { requireAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import {
-  categorySchema,
   productSchema,
+  itemSchema,
   stockAdjustmentSchema,
 } from "@/lib/validation";
 import { Prisma } from "@/generated/prisma/client";
@@ -32,76 +32,12 @@ export async function setCustomerStatus(
   revalidatePath("/admin/customers");
 }
 
-// ---------- Categories ----------
-
-function categoryInput(formData: FormData) {
-  return categorySchema.safeParse({
-    nameEn: formData.get("nameEn"),
-    nameZh: formData.get("nameZh"),
-    sortOrder: formData.get("sortOrder") || "0",
-  });
-}
-
-export async function createCategory(
-  _prev: ActionState,
-  formData: FormData
-): Promise<ActionState> {
-  await requireAdmin();
-  const parsed = categoryInput(formData);
-  if (!parsed.success) return { error: parsed.error.issues[0].message };
-
-  await prisma.category.create({ data: parsed.data });
-  revalidatePath("/admin/categories");
-  return { success: "Category created" };
-}
-
-export async function updateCategory(
-  id: string,
-  _prev: ActionState,
-  formData: FormData
-): Promise<ActionState> {
-  await requireAdmin();
-  const parsed = categoryInput(formData);
-  if (!parsed.success) return { error: parsed.error.issues[0].message };
-
-  await prisma.category.update({ where: { id }, data: parsed.data });
-  revalidatePath("/admin/categories");
-  return { success: "Category updated" };
-}
-
-export async function deleteCategory(id: string): Promise<ActionState> {
-  await requireAdmin();
-  const productCount = await prisma.product.count({
-    where: { categoryId: id },
-  });
-  if (productCount > 0) {
-    return {
-      error: `Cannot delete: ${productCount} product(s) still in this category`,
-    };
-  }
-  await prisma.category.delete({ where: { id } });
-  revalidatePath("/admin/categories");
-  return { success: "Category deleted" };
-}
-
-// ---------- Products ----------
+// ---------- Products (groupings of items) ----------
 
 function productInput(formData: FormData) {
   return productSchema.safeParse({
-    categoryId: formData.get("categoryId"),
-    sku: formData.get("sku"),
-    nameEn: formData.get("nameEn"),
-    nameZh: formData.get("nameZh"),
-    detailEn: formData.get("detailEn"),
-    detailZh: formData.get("detailZh"),
-    unitWeightG: formData.get("unitWeightG"),
-    piecesPerCase: formData.get("piecesPerCase"),
-    caseLengthCm: formData.get("caseLengthCm"),
-    caseWidthCm: formData.get("caseWidthCm"),
-    caseHeightCm: formData.get("caseHeightCm"),
-    minOrderCases: formData.get("minOrderCases") || "1",
-    lowStockThreshold: formData.get("lowStockThreshold") || "10",
-    isActive: formData.get("isActive") === "on",
+    name: formData.get("name"),
+    sortOrder: formData.get("sortOrder") || "0",
   });
 }
 
@@ -113,9 +49,9 @@ export async function createProduct(
   const parsed = productInput(formData);
   if (!parsed.success) return { error: parsed.error.issues[0].message };
 
-  const product = await prisma.product.create({ data: parsed.data });
+  await prisma.product.create({ data: parsed.data });
   revalidatePath("/admin/products");
-  redirect(`/admin/products/${product.id}`);
+  return { success: "Product created" };
 }
 
 export async function updateProduct(
@@ -129,14 +65,73 @@ export async function updateProduct(
 
   await prisma.product.update({ where: { id }, data: parsed.data });
   revalidatePath("/admin/products");
-  revalidatePath(`/admin/products/${id}`);
-  return { success: "Product saved" };
+  return { success: "Product updated" };
 }
 
 export async function deleteProduct(id: string): Promise<ActionState> {
   await requireAdmin();
+  const itemCount = await prisma.item.count({ where: { productId: id } });
+  if (itemCount > 0) {
+    return {
+      error: `Cannot delete: ${itemCount} item(s) still under this product`,
+    };
+  }
+  await prisma.product.delete({ where: { id } });
+  revalidatePath("/admin/products");
+  return { success: "Product deleted" };
+}
+
+// ---------- Items (orderable SKUs) ----------
+
+function itemInput(formData: FormData) {
+  return itemSchema.safeParse({
+    productId: formData.get("productId"),
+    sku: formData.get("sku"),
+    name: formData.get("name"),
+    detail: formData.get("detail"),
+    unitWeightG: formData.get("unitWeightG"),
+    piecesPerCase: formData.get("piecesPerCase"),
+    caseLengthCm: formData.get("caseLengthCm"),
+    caseWidthCm: formData.get("caseWidthCm"),
+    caseHeightCm: formData.get("caseHeightCm"),
+    minOrderCases: formData.get("minOrderCases") || "1",
+    lowStockThreshold: formData.get("lowStockThreshold") || "10",
+    isActive: formData.get("isActive") === "on",
+  });
+}
+
+export async function createItem(
+  _prev: ActionState,
+  formData: FormData
+): Promise<ActionState> {
+  await requireAdmin();
+  const parsed = itemInput(formData);
+  if (!parsed.success) return { error: parsed.error.issues[0].message };
+
+  const item = await prisma.item.create({ data: parsed.data });
+  revalidatePath("/admin/items");
+  redirect(`/admin/items/${item.id}`);
+}
+
+export async function updateItem(
+  id: string,
+  _prev: ActionState,
+  formData: FormData
+): Promise<ActionState> {
+  await requireAdmin();
+  const parsed = itemInput(formData);
+  if (!parsed.success) return { error: parsed.error.issues[0].message };
+
+  await prisma.item.update({ where: { id }, data: parsed.data });
+  revalidatePath("/admin/items");
+  revalidatePath(`/admin/items/${id}`);
+  return { success: "Item saved" };
+}
+
+export async function deleteItem(id: string): Promise<ActionState> {
+  await requireAdmin();
   try {
-    await prisma.product.delete({ where: { id } });
+    await prisma.item.delete({ where: { id } });
   } catch (e) {
     if (
       e instanceof Prisma.PrismaClientKnownRequestError &&
@@ -144,13 +139,13 @@ export async function deleteProduct(id: string): Promise<ActionState> {
     ) {
       return {
         error:
-          "Cannot delete: product is referenced by orders. Deactivate it instead.",
+          "Cannot delete: item is referenced by orders. Deactivate it instead.",
       };
     }
     throw e;
   }
-  revalidatePath("/admin/products");
-  redirect("/admin/products");
+  revalidatePath("/admin/items");
+  redirect("/admin/items");
 }
 
 // ---------- Stock adjustments ----------
@@ -161,42 +156,42 @@ export async function adjustStock(
 ): Promise<ActionState> {
   const admin = await requireAdmin();
   const parsed = stockAdjustmentSchema.safeParse({
-    productId: formData.get("productId"),
+    itemId: formData.get("itemId"),
     deltaCases: formData.get("deltaCases"),
     reason: formData.get("reason"),
     note: formData.get("note"),
   });
   if (!parsed.success) return { error: parsed.error.issues[0].message };
 
-  const { productId, deltaCases, reason, note } = parsed.data;
+  const { itemId, deltaCases, reason, note } = parsed.data;
 
   try {
     await prisma.$transaction(async (tx) => {
-      // Row lock so concurrent adjustments/orders serialize on this product
+      // Row lock so concurrent adjustments/orders serialize on this item
       const rows = await tx.$queryRaw<{ stock_cases: number }[]>`
-        SELECT stock_cases FROM products WHERE id = ${productId} FOR UPDATE`;
-      if (rows.length === 0) throw new Error("PRODUCT_NOT_FOUND");
+        SELECT stock_cases FROM items WHERE id = ${itemId} FOR UPDATE`;
+      if (rows.length === 0) throw new Error("ITEM_NOT_FOUND");
       if (rows[0].stock_cases + deltaCases < 0) throw new Error("NEGATIVE");
 
-      await tx.product.update({
-        where: { id: productId },
+      await tx.item.update({
+        where: { id: itemId },
         data: { stockCases: { increment: deltaCases } },
       });
       await tx.stockAdjustment.create({
-        data: { productId, userId: admin.id, deltaCases, reason, note },
+        data: { itemId, userId: admin.id, deltaCases, reason, note },
       });
     });
   } catch (e) {
     if (e instanceof Error && e.message === "NEGATIVE") {
       return { error: "Adjustment would make stock negative" };
     }
-    if (e instanceof Error && e.message === "PRODUCT_NOT_FOUND") {
-      return { error: "Product not found" };
+    if (e instanceof Error && e.message === "ITEM_NOT_FOUND") {
+      return { error: "Item not found" };
     }
     throw e;
   }
 
-  revalidatePath(`/admin/products/${productId}`);
-  revalidatePath("/admin/products");
+  revalidatePath(`/admin/items/${itemId}`);
+  revalidatePath("/admin/items");
   return { success: "Stock adjusted" };
 }

@@ -2,35 +2,23 @@
 
 import { useActionState, useState, useTransition } from "react";
 import {
-  createCategory,
-  updateCategory,
-  deleteCategory,
+  createProduct,
+  updateProduct,
+  deleteProduct,
   type ActionState,
 } from "../actions";
 
 const inputCls =
   "rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-900 focus:border-blue-500 focus:outline-none";
 
-export function NewCategoryForm() {
-  const [state, formAction, pending] = useActionState(
-    async (prev: ActionState, formData: FormData) => {
-      const result = await createCategory(prev, formData);
-      return result;
-    },
-    null
-  );
+export function NewProductForm() {
+  const [state, formAction, pending] = useActionState(createProduct, null);
 
   return (
     <form action={formAction} className="flex flex-wrap items-end gap-3">
       <div>
-        <label className="mb-1 block text-xs text-gray-500">
-          Chinese name 中文名
-        </label>
-        <input name="nameZh" type="text" className={inputCls} />
-      </div>
-      <div>
-        <label className="mb-1 block text-xs text-gray-500">English name</label>
-        <input name="nameEn" type="text" className={inputCls} />
+        <label className="mb-1 block text-xs text-gray-500">Name</label>
+        <input name="name" type="text" required className={`${inputCls} w-64`} />
       </div>
       <div>
         <label className="mb-1 block text-xs text-gray-500">Sort order</label>
@@ -56,22 +44,21 @@ export function NewCategoryForm() {
   );
 }
 
-export function CategoryRow({
-  category,
+export function ProductRow({
+  product,
 }: {
-  category: {
+  product: {
     id: string;
-    nameEn: string | null;
-    nameZh: string | null;
+    name: string;
     sortOrder: number;
-    productCount: number;
+    itemCount: number;
   };
 }) {
   const [editing, setEditing] = useState(false);
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
-  const updateWithId = updateCategory.bind(null, category.id);
+  const updateWithId = updateProduct.bind(null, product.id);
   const [state, formAction, saving] = useActionState(
     async (prev: ActionState, formData: FormData) => {
       const result = await updateWithId(prev, formData);
@@ -84,7 +71,7 @@ export function CategoryRow({
   const onDelete = () => {
     setError(null);
     startTransition(async () => {
-      const result = await deleteCategory(category.id);
+      const result = await deleteProduct(product.id);
       if (result && "error" in result) setError(result.error);
     });
   };
@@ -92,28 +79,16 @@ export function CategoryRow({
   if (editing) {
     return (
       <tr className="bg-blue-50/50">
-        <td colSpan={5} className="px-4 py-3">
+        <td colSpan={4} className="px-4 py-3">
           <form action={formAction} className="flex flex-wrap items-end gap-3">
             <div>
-              <label className="mb-1 block text-xs text-gray-500">
-                Chinese name 中文名
-              </label>
+              <label className="mb-1 block text-xs text-gray-500">Name</label>
               <input
-                name="nameZh"
+                name="name"
                 type="text"
-                defaultValue={category.nameZh ?? ""}
-                className={inputCls}
-              />
-            </div>
-            <div>
-              <label className="mb-1 block text-xs text-gray-500">
-                English name
-              </label>
-              <input
-                name="nameEn"
-                type="text"
-                defaultValue={category.nameEn ?? ""}
-                className={inputCls}
+                required
+                defaultValue={product.name}
+                className={`${inputCls} w-64`}
               />
             </div>
             <div>
@@ -121,7 +96,7 @@ export function CategoryRow({
               <input
                 name="sortOrder"
                 type="number"
-                defaultValue={category.sortOrder}
+                defaultValue={product.sortOrder}
                 min={0}
                 className={`${inputCls} w-24`}
               />
@@ -151,10 +126,9 @@ export function CategoryRow({
 
   return (
     <tr>
-      <td className="px-4 py-3 text-gray-900">{category.nameZh ?? "—"}</td>
-      <td className="px-4 py-3 text-gray-900">{category.nameEn ?? "—"}</td>
-      <td className="px-4 py-3 text-gray-500">{category.sortOrder}</td>
-      <td className="px-4 py-3 text-gray-500">{category.productCount}</td>
+      <td className="px-4 py-3 font-medium text-gray-900">{product.name}</td>
+      <td className="px-4 py-3 text-gray-500">{product.sortOrder}</td>
+      <td className="px-4 py-3 text-gray-500">{product.itemCount}</td>
       <td className="px-4 py-3 text-right">
         <span className="inline-flex items-center gap-2">
           {error && <span className="text-xs text-red-600">{error}</span>}
@@ -167,11 +141,11 @@ export function CategoryRow({
           </button>
           <button
             type="button"
-            disabled={pending || category.productCount > 0}
+            disabled={pending || product.itemCount > 0}
             onClick={onDelete}
             title={
-              category.productCount > 0
-                ? "Move or delete its products first"
+              product.itemCount > 0
+                ? "Move or delete its items first"
                 : undefined
             }
             className="rounded-lg border border-red-300 px-3 py-1 text-xs text-red-700 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-40"

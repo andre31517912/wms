@@ -6,12 +6,12 @@ import { adjustStock } from "../../actions";
 const inputCls =
   "rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-900 focus:border-blue-500 focus:outline-none";
 
-export function StockAdjustForm({ productId }: { productId: string }) {
+export function StockAdjustForm({ itemId }: { itemId: string }) {
   const [state, formAction, pending] = useActionState(adjustStock, null);
 
   return (
     <form action={formAction} className="flex flex-wrap items-end gap-3">
-      <input type="hidden" name="productId" value={productId} />
+      <input type="hidden" name="itemId" value={itemId} />
       <div>
         <label className="mb-1 block text-xs text-gray-500">
           Cases (+ receive / − remove)

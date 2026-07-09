@@ -12,7 +12,12 @@ Key Next.js 16 differences (verified against bundled docs):
 
 # Project: WMS — warehouse management & ordering app
 
-B2B ordering system for a disposable foodservice packaging distributor (sushi containers, PET cups, cutlery...). Customers order **by the case**; inventory is tracked in cases. Product/category names are bilingual (English + Chinese) — store both, display gracefully when one is missing.
+B2B ordering system for a disposable foodservice packaging distributor (sushi containers, PET cups, cutlery...). Customers order **by the case**; inventory is tracked in cases.
+
+## Terminology (renamed 2026-07-08 at owner's request — was Category/Product before)
+- **Product** = the grouping / product line (e.g. "Sushi Containers"). Table `products`. Just `name` + `sortOrder`.
+- **Item** = the orderable SKU-level entry (e.g. "Sushi Tray Small"), stocked and sold by the case. Table `items`, FK `product_id`.
+- Names are **single-field** (`name`, optional `detail`) — the earlier bilingual name_en/name_zh pairs were merged (Chinese preferred) in migration `20260709000100`. The bulk importer still accepts Chinese or English headers and takes whichever is filled (品名 wins over English name if both).
 
 ## Stack
 Next.js 16 (App Router) + TypeScript + Prisma + PostgreSQL 17 (Docker locally, Neon in prod) + Tailwind v4 + zod. Hand-rolled auth: bcrypt password hashes, DB-backed sessions, httpOnly cookies. Deployed on Vercel, auto-deploy from `main`.
@@ -23,9 +28,9 @@ Next.js 16 (App Router) + TypeScript + Prisma + PostgreSQL 17 (Docker locally, N
 - **Stock display**: customers see only In stock / Low / Out badges, never exact counts. Admins see exact counts.
 - **Stock timing**: stock (in cases) is decremented at order submission inside a DB transaction with row locking (`SELECT ... FOR UPDATE`); restored if admin cancels. `CHECK (stock_cases >= 0)` as last line of defense.
 - **Audit trail**: every stock change writes a StockAdjustment row (who, delta, reason, when). Order placement/cancellation writes there too.
-- **Min order quantity** is per-product, in cases, validated server-side.
+- **Min order quantity** is per-item, in cases, validated server-side.
 - SKU is optional and NOT a primary key.
-- Order items snapshot product name/SKU at purchase time so history survives product edits.
+- Order lines snapshot item name/SKU at purchase time so history survives item edits.
 
 ## Conventions
 - All input validation with zod at every API boundary
