@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { stockLevel } from "@/lib/display";
+import { formatDims, stockLevel } from "@/lib/display";
 
 const LEVEL_BADGE = {
   in_stock: "bg-green-100 text-green-800",
@@ -74,6 +74,7 @@ export default async function ItemsPage(props: {
                 <th className="px-4 py-3">Item</th>
                 <th className="px-4 py-3">Product</th>
                 <th className="px-4 py-3 text-right">Pcs/case</th>
+                <th className="px-4 py-3 text-right">Case dims (cm)</th>
                 <th className="px-4 py-3 text-right">Min order</th>
                 <th className="px-4 py-3 text-right">Stock (cases)</th>
                 <th className="px-4 py-3">Status</th>
@@ -103,6 +104,9 @@ export default async function ItemsPage(props: {
                     </td>
                     <td className="px-4 py-3 text-right text-gray-600">
                       {item.piecesPerCase}
+                    </td>
+                    <td className="px-4 py-3 text-right text-gray-600 whitespace-nowrap">
+                      {formatDims(item.caseLengthCm, item.caseWidthCm, item.caseHeightCm)}
                     </td>
                     <td className="px-4 py-3 text-right text-gray-600">
                       {item.minOrderCases}
