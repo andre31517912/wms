@@ -148,6 +148,110 @@ export async function deleteItem(id: string): Promise<ActionState> {
   redirect("/admin/items");
 }
 
+// ---------- Item photos ----------
+
+const MAX_UPLOAD_BYTES = 8 * 1024 * 1024;
+const MAX_PHOTOS_PER_ITEM = 6;
+const ALLOWED_UPLOAD_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+
+export async function uploadItemImages(
+  itemId: string,
+  _prev: ActionState,
+  formData: FormData
+): Promise<ActionState> {
+  await requireAdmin();
+
+  const item = await prisma.item.findUnique({
+    where: { id: itemId },
+    select: { id: true, _count: { select: { images: true } } },
+  });
+  if (!item) return { error: "Item not found" };
+
+  const files = formData
+    .getAll("files")
+    .filter((f): f is File => f instanceof File && f.size > 0);
+  if (files.length === 0) return { error: "Choose at least one image" };
+
+  const room = MAX_PHOTOS_PER_ITEM - item._count.images;
+  if (files.length > room) {
+    return {
+      error: `Max ${MAX_PHOTOS_PER_ITEM} photos per item (${room > 0 ? `${room} slot(s) left` : "no slots left"})`,
+    };
+  }
+
+  for (const file of files) {
+    if (!ALLOWED_UPLOAD_TYPES.includes(file.type)) {
+      return { error: `${file.name}: only JPEG, PNG, WebP or GIF images` };
+    }
+    if (file.size > MAX_UPLOAD_BYTES) {
+      return { error: `${file.name}: file too large (max 8 MB)` };
+    }
+  }
+
+  // Import lazily so the sharp native binary only loads when actually needed
+  const sharp = (await import("sharp")).default;
+
+  const last = await prisma.itemImage.findFirst({
+    where: { itemId },
+    orderBy: { sortOrder: "desc" },
+    select: { sortOrder: true },
+  });
+  let nextSort = (last?.sortOrder ?? -1) + 1;
+
+  for (const file of files) {
+    let processed: Buffer;
+    try {
+      processed = await sharp(Buffer.from(await file.arrayBuffer()))
+        .rotate() // respect EXIF orientation
+        .resize({ width: 800, height: 800, fit: "inside", withoutEnlargement: true })
+        .webp({ quality: 80 })
+        .toBuffer();
+    } catch {
+      return { error: `${file.name}: could not be read as an image` };
+    }
+    await prisma.itemImage.create({
+      data: {
+        itemId,
+        data: new Uint8Array(processed),
+        mimeType: "image/webp",
+        sortOrder: nextSort++,
+      },
+    });
+  }
+
+  revalidatePath(`/admin/items/${itemId}`);
+  return { success: `${files.length} photo(s) uploaded` };
+}
+
+export async function deleteItemImage(imageId: string): Promise<void> {
+  await requireAdmin();
+  const image = await prisma.itemImage.delete({
+    where: { id: imageId },
+    select: { itemId: true },
+  });
+  revalidatePath(`/admin/items/${image.itemId}`);
+}
+
+export async function makeMainItemImage(imageId: string): Promise<void> {
+  await requireAdmin();
+  const image = await prisma.itemImage.findUnique({
+    where: { id: imageId },
+    select: { itemId: true },
+  });
+  if (!image) return;
+
+  const first = await prisma.itemImage.findFirst({
+    where: { itemId: image.itemId },
+    orderBy: { sortOrder: "asc" },
+    select: { sortOrder: true },
+  });
+  await prisma.itemImage.update({
+    where: { id: imageId },
+    data: { sortOrder: (first?.sortOrder ?? 0) - 1 },
+  });
+  revalidatePath(`/admin/items/${image.itemId}`);
+}
+
 // ---------- Stock adjustments ----------
 
 export async function adjustStock(

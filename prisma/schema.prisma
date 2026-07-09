@@ -73,10 +73,25 @@ model Item {
   createdAt         DateTime          @default(now()) @map("created_at")
   updatedAt         DateTime          @updatedAt @map("updated_at")
   adjustments       StockAdjustment[]
+  images            ItemImage[]
 
   @@index([productId])
   @@index([sku])
   @@map("items")
+}
+
+/// Item photo, stored in-DB as resized WebP (~800px). First by sortOrder = main image.
+model ItemImage {
+  id        String   @id @default(cuid())
+  itemId    String   @map("item_id")
+  item      Item     @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  data      Bytes
+  mimeType  String   @map("mime_type")
+  sortOrder Int      @default(0) @map("sort_order")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([itemId, sortOrder])
+  @@map("item_images")
 }
 
 model StockAdjustment {

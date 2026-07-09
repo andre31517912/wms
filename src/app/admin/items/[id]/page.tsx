@@ -5,6 +5,7 @@ import { updateItem } from "../../actions";
 import { ItemForm } from "../ItemForm";
 import { StockAdjustForm } from "./StockAdjustForm";
 import { DeleteItemButton } from "./DeleteItemButton";
+import { ItemPhotos } from "./ItemPhotos";
 
 const LEVEL_TEXT = {
   in_stock: ["In stock", "text-green-700"],
@@ -22,6 +23,10 @@ export default async function ItemDetailPage(props: {
       where: { id },
       include: {
         product: true,
+        images: {
+          orderBy: { sortOrder: "asc" },
+          select: { id: true },
+        },
         adjustments: {
           orderBy: { createdAt: "desc" },
           take: 50,
@@ -66,6 +71,11 @@ export default async function ItemDetailPage(props: {
           <p className="mb-3 text-sm font-medium text-gray-700">Adjust stock</p>
           <StockAdjustForm itemId={item.id} />
         </div>
+      </div>
+
+      <div className="mb-8 rounded-xl bg-white p-6 shadow-sm">
+        <h2 className="mb-4 text-lg font-medium text-gray-900">Photos</h2>
+        <ItemPhotos itemId={item.id} photos={item.images} />
       </div>
 
       <div className="mb-8 rounded-xl bg-white p-6 shadow-sm">
