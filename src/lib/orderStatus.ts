@@ -16,13 +16,17 @@ export const ORDER_STATUS_BADGE: Record<OrderStatus, string> = {
   CANCELLED: "bg-gray-200 text-gray-600",
 };
 
-/** Forward-only workflow; cancellation possible until delivered. */
+/**
+ * Workflow with one-step undo: each status can move forward, or back to the
+ * previous step to correct a mis-click. Reinstating a cancelled order
+ * re-deducts stock (validated); cancelling restores it.
+ */
 export const ORDER_STATUS_TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
   PENDING: ["CONFIRMED", "CANCELLED"],
-  CONFIRMED: ["OUT_FOR_DELIVERY", "CANCELLED"],
-  OUT_FOR_DELIVERY: ["DELIVERED", "CANCELLED"],
-  DELIVERED: [],
-  CANCELLED: [],
+  CONFIRMED: ["OUT_FOR_DELIVERY", "PENDING", "CANCELLED"],
+  OUT_FOR_DELIVERY: ["DELIVERED", "CONFIRMED", "CANCELLED"],
+  DELIVERED: ["OUT_FOR_DELIVERY"],
+  CANCELLED: ["PENDING"],
 };
 
 export const ALL_ORDER_STATUSES: OrderStatus[] = [

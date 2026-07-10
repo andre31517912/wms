@@ -20,17 +20,10 @@ export function StatusControls({
   const [error, setError] = useState<string | null>(null);
 
   const nexts = ORDER_STATUS_TRANSITIONS[status];
-  if (nexts.length === 0) {
-    return (
-      <p className="text-sm text-gray-400">
-        This order is {ORDER_STATUS_LABEL[status].toLowerCase()} — no further
-        changes.
-      </p>
-    );
-  }
 
   const changed = selected !== status;
   const cancelling = selected === "CANCELLED";
+  const reinstating = status === "CANCELLED" && changed;
 
   const apply = () => {
     if (!changed) return;
@@ -72,13 +65,21 @@ export function StatusControls({
             ? "Updating..."
             : cancelling
               ? "Cancel order (restores stock)"
-              : `Set to ${ORDER_STATUS_LABEL[selected].toLowerCase()}`}
+              : reinstating
+                ? "Reinstate order (re-deducts stock)"
+                : `Set to ${ORDER_STATUS_LABEL[selected].toLowerCase()}`}
         </button>
       )}
 
       {cancelling && changed && !pending && (
         <p className="text-xs text-amber-600">
           Cancelling returns all cases in this order to stock.
+        </p>
+      )}
+      {reinstating && !pending && (
+        <p className="text-xs text-amber-600">
+          Reinstating takes the cases back out of stock — it will fail if
+          stock has since run out.
         </p>
       )}
       {error && <p className="w-full text-sm text-red-600">{error}</p>}

@@ -293,6 +293,45 @@ export async function updateOrderStatus(
             },
           });
         }
+      } else if (order.status === "CANCELLED") {
+        // Reinstating a cancelled order: take the stock back out, but only
+        // if it's still available (someone may have ordered it meanwhile)
+        const itemIds = order.lines.map((l) => l.itemId);
+        const locked = await tx.$queryRaw<
+          { id: string; name: string; stock_cases: number }[]
+        >`
+          SELECT id, name, stock_cases FROM items
+          WHERE id = ANY(${itemIds}) ORDER BY id FOR UPDATE`;
+        const byId = new Map(locked.map((i) => [i.id, i]));
+
+        const short: string[] = [];
+        for (const line of order.lines) {
+          const item = byId.get(line.itemId);
+          if (!item || item.stock_cases < line.qtyCases) {
+            short.push(
+              `${item?.name ?? line.snapshotName}: needs ${line.qtyCases}, only ${item?.stock_cases ?? 0} in stock`
+            );
+          }
+        }
+        if (short.length > 0) {
+          throw new Error(`REINSTATE_SHORT:${short.join(" · ")}`);
+        }
+
+        for (const line of order.lines) {
+          await tx.item.update({
+            where: { id: line.itemId },
+            data: { stockCases: { decrement: line.qtyCases } },
+          });
+          await tx.stockAdjustment.create({
+            data: {
+              itemId: line.itemId,
+              userId: admin.id,
+              deltaCases: -line.qtyCases,
+              reason: "ORDER",
+              note: `${order.orderNumber} (reinstated)`,
+            },
+          });
+        }
       }
 
       await tx.order.update({
@@ -306,6 +345,11 @@ export async function updateOrderStatus(
     }
     if (e instanceof Error && e.message === "BAD_TRANSITION") {
       return { error: "That status change is not allowed" };
+    }
+    if (e instanceof Error && e.message.startsWith("REINSTATE_SHORT:")) {
+      return {
+        error: `Cannot reinstate — ${e.message.slice("REINSTATE_SHORT:".length)}`,
+      };
     }
     throw e;
   }
