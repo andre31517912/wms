@@ -29,5 +29,7 @@ export const config = {
     "/pending",
     "/admin/:path*",
     "/catalog/:path*",
+    "/cart",
+    "/orders/:path*",
   ],
 };

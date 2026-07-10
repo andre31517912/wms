@@ -38,6 +38,8 @@ model User {
   updatedAt     DateTime      @updatedAt @map("updated_at")
   sessions      Session[]
   adjustments   StockAdjustment[]
+  orders        Order[]
+  cartLines     CartLine[]
 
   @@map("users")
 }
@@ -74,6 +76,8 @@ model Item {
   updatedAt         DateTime          @updatedAt @map("updated_at")
   adjustments       StockAdjustment[]
   images            ItemImage[]
+  orderLines        OrderLine[]
+  cartLines         CartLine[]
 
   @@index([productId])
   @@index([sku])
@@ -107,6 +111,63 @@ model StockAdjustment {
 
   @@index([itemId, createdAt])
   @@map("stock_adjustments")
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  OUT_FOR_DELIVERY
+  DELIVERED
+  CANCELLED
+}
+
+model Order {
+  id           String      @id @default(cuid())
+  orderNumber  String      @unique @map("order_number")
+  customerId   String      @map("customer_id")
+  customer     User        @relation(fields: [customerId], references: [id])
+  status       OrderStatus @default(PENDING)
+  deliveryDate DateTime?   @map("delivery_date") @db.Date
+  note         String?
+  createdAt    DateTime    @default(now()) @map("created_at")
+  updatedAt    DateTime    @updatedAt @map("updated_at")
+  lines        OrderLine[]
+
+  @@index([customerId, createdAt])
+  @@index([status])
+  @@map("orders")
+}
+
+/// Line snapshots item facts at purchase time so history survives item edits
+model OrderLine {
+  id                    String  @id @default(cuid())
+  orderId               String  @map("order_id")
+  order                 Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  itemId                String  @map("item_id")
+  item                  Item    @relation(fields: [itemId], references: [id], onDelete: Restrict)
+  qtyCases              Int     @map("qty_cases")
+  snapshotName          String  @map("snapshot_name")
+  snapshotSku           String? @map("snapshot_sku")
+  snapshotProductName   String  @map("snapshot_product_name")
+  snapshotPiecesPerCase Int     @map("snapshot_pieces_per_case")
+
+  @@index([orderId])
+  @@index([itemId])
+  @@map("order_lines")
+}
+
+model CartLine {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  itemId    String   @map("item_id")
+  item      Item     @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  qtyCases  Int      @map("qty_cases")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([userId, itemId])
+  @@map("cart_lines")
 }
 
 model Session {

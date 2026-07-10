@@ -102,6 +102,13 @@ export async function requireApprovedUser(): Promise<User> {
   return user;
 }
 
+/** Logged-in, APPROVED, role CUSTOMER — for cart/order actions. */
+export async function requireApprovedCustomer(): Promise<User> {
+  const user = await requireApprovedUser();
+  if (user.role !== "CUSTOMER") redirect("/admin");
+  return user;
+}
+
 /** Where a user should land after login / on the root route. */
 export function homePathFor(user: User): string {
   if (user.accountStatus === "PENDING") return "/pending";
