@@ -29,6 +29,7 @@ export default async function CustomersPage() {
                 <th className="px-4 py-3">Email</th>
                 <th className="px-4 py-3">Status</th>
                 <th className="px-4 py-3">Registered</th>
+                <th className="px-4 py-3">History</th>
                 <th className="px-4 py-3 text-right">Actions</th>
               </tr>
             </thead>
@@ -48,6 +49,14 @@ export default async function CustomersPage() {
                   </td>
                   <td className="px-4 py-3 text-gray-500">
                     {c.createdAt.toLocaleDateString("en-CA")}
+                  </td>
+                  <td className="px-4 py-3">
+                    <a
+                      href={`/admin/orders?customer=${c.id}`}
+                      className="text-xs text-blue-600 hover:underline"
+                    >
+                      Orders
+                    </a>
                   </td>
                   <td className="px-4 py-3 text-right">
                     <CustomerStatusButtons

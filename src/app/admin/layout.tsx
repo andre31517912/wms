@@ -18,6 +18,12 @@ export default async function AdminLayout({
               WMS Admin
             </Link>
             <Link
+              href="/admin/orders"
+              className="text-sm text-gray-600 hover:text-gray-900"
+            >
+              Orders
+            </Link>
+            <Link
               href="/admin/customers"
               className="text-sm text-gray-600 hover:text-gray-900"
             >

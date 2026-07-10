@@ -15,3 +15,20 @@ export const ORDER_STATUS_BADGE: Record<OrderStatus, string> = {
   DELIVERED: "bg-green-100 text-green-800",
   CANCELLED: "bg-gray-200 text-gray-600",
 };
+
+/** Forward-only workflow; cancellation possible until delivered. */
+export const ORDER_STATUS_TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
+  PENDING: ["CONFIRMED", "CANCELLED"],
+  CONFIRMED: ["OUT_FOR_DELIVERY", "CANCELLED"],
+  OUT_FOR_DELIVERY: ["DELIVERED", "CANCELLED"],
+  DELIVERED: [],
+  CANCELLED: [],
+};
+
+export const ALL_ORDER_STATUSES: OrderStatus[] = [
+  "PENDING",
+  "CONFIRMED",
+  "OUT_FOR_DELIVERY",
+  "DELIVERED",
+  "CANCELLED",
+];

@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { z } from "zod";
 import { requireAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import {
@@ -9,7 +10,8 @@ import {
   itemSchema,
   stockAdjustmentSchema,
 } from "@/lib/validation";
-import { Prisma } from "@/generated/prisma/client";
+import { ORDER_STATUS_TRANSITIONS } from "@/lib/orderStatus";
+import { Prisma, type OrderStatus } from "@/generated/prisma/client";
 
 export type ActionState = { error: string } | { success: string } | null;
 
@@ -250,6 +252,100 @@ export async function makeMainItemImage(imageId: string): Promise<void> {
     data: { sortOrder: (first?.sortOrder ?? 0) - 1 },
   });
   revalidatePath(`/admin/items/${image.itemId}`);
+}
+
+// ---------- Orders ----------
+
+export async function updateOrderStatus(
+  orderId: string,
+  next: OrderStatus
+): Promise<ActionState> {
+  const admin = await requireAdmin();
+
+  try {
+    await prisma.$transaction(async (tx) => {
+      const order = await tx.order.findUnique({
+        where: { id: orderId },
+        include: { lines: { orderBy: { itemId: "asc" } } },
+      });
+      if (!order) throw new Error("NOT_FOUND");
+      if (!ORDER_STATUS_TRANSITIONS[order.status].includes(next)) {
+        throw new Error("BAD_TRANSITION");
+      }
+
+      if (next === "CANCELLED") {
+        // Restore the stock this order was holding, with audit entries
+        const itemIds = order.lines.map((l) => l.itemId);
+        await tx.$queryRaw`
+          SELECT id FROM items WHERE id = ANY(${itemIds}) ORDER BY id FOR UPDATE`;
+        for (const line of order.lines) {
+          await tx.item.update({
+            where: { id: line.itemId },
+            data: { stockCases: { increment: line.qtyCases } },
+          });
+          await tx.stockAdjustment.create({
+            data: {
+              itemId: line.itemId,
+              userId: admin.id,
+              deltaCases: line.qtyCases,
+              reason: "ORDER_CANCELLED",
+              note: order.orderNumber,
+            },
+          });
+        }
+      }
+
+      await tx.order.update({
+        where: { id: orderId },
+        data: { status: next },
+      });
+    });
+  } catch (e) {
+    if (e instanceof Error && e.message === "NOT_FOUND") {
+      return { error: "Order not found" };
+    }
+    if (e instanceof Error && e.message === "BAD_TRANSITION") {
+      return { error: "That status change is not allowed" };
+    }
+    throw e;
+  }
+
+  revalidatePath("/admin/orders");
+  revalidatePath(`/admin/orders/${orderId}`);
+  revalidatePath("/orders");
+  return { success: "Status updated" };
+}
+
+const deliveryDateSchema = z
+  .string()
+  .regex(/^\d{4}-\d{2}-\d{2}$/, "Pick a valid date");
+
+export async function setDeliveryDate(
+  orderId: string,
+  _prev: ActionState,
+  formData: FormData
+): Promise<ActionState> {
+  await requireAdmin();
+
+  const raw = String(formData.get("deliveryDate") ?? "");
+  if (raw === "") {
+    await prisma.order.update({
+      where: { id: orderId },
+      data: { deliveryDate: null },
+    });
+  } else {
+    const parsed = deliveryDateSchema.safeParse(raw);
+    if (!parsed.success) return { error: parsed.error.issues[0].message };
+    await prisma.order.update({
+      where: { id: orderId },
+      data: { deliveryDate: new Date(`${parsed.data}T00:00:00.000Z`) },
+    });
+  }
+
+  revalidatePath("/admin/orders");
+  revalidatePath(`/admin/orders/${orderId}`);
+  revalidatePath("/orders");
+  return { success: "Delivery date saved" };
 }
 
 // ---------- Stock adjustments ----------
