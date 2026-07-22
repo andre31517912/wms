@@ -2,8 +2,10 @@
 
 import { useActionState } from "react";
 import { placeOrder, type CartActionState } from "../actions";
+import { useI18n } from "@/lib/i18n";
 
 export function CheckoutForm() {
+  const { t } = useI18n();
   const [state, formAction, pending] = useActionState(
     async (prev: CartActionState, formData: FormData) =>
       placeOrder(prev, formData),
@@ -13,14 +15,14 @@ export function CheckoutForm() {
   return (
     <form action={formAction}>
       <label className="mb-1 block text-xs text-gray-500" htmlFor="note">
-        Note for the supplier (optional)
+        {t("supplierNote")}
       </label>
       <textarea
         id="note"
         name="note"
         rows={2}
         maxLength={500}
-        placeholder="Delivery instructions, preferred date..."
+        placeholder={t("deliveryPlaceholder")}
         className="mb-4 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none"
       />
       {state && "error" in state && (
@@ -33,11 +35,10 @@ export function CheckoutForm() {
         disabled={pending}
         className="w-full rounded-lg bg-blue-600 py-2.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
       >
-        {pending ? "Placing order..." : "Place order"}
+        {pending ? t("placingOrder") : t("placeOrder")}
       </button>
       <p className="mt-2 text-center text-xs text-gray-400">
-        Stock is reserved when the order is placed. The supplier will confirm
-        and schedule delivery.
+        {t("stockReservedNote")}
       </p>
     </form>
   );

@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import type { OrderStatus } from "@/generated/prisma/client";
+import { useI18n } from "@/lib/i18n";
 import {
   ORDER_STATUS_LABEL,
   ORDER_STATUS_TRANSITIONS,
@@ -15,6 +16,7 @@ export function StatusControls({
   orderId: string;
   status: OrderStatus;
 }) {
+  const { t } = useI18n();
   const [selected, setSelected] = useState<OrderStatus>(status);
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -42,10 +44,12 @@ export function StatusControls({
         disabled={pending}
         className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-900 focus:border-blue-500 focus:outline-none"
       >
-        <option value={status}>{ORDER_STATUS_LABEL[status]} (current)</option>
+        <option value={status}>
+          {t(ORDER_STATUS_LABEL[status])} {t("current")}
+        </option>
         {nexts.map((s) => (
           <option key={s} value={s}>
-            {ORDER_STATUS_LABEL[s]}
+            {t(ORDER_STATUS_LABEL[s])}
           </option>
         ))}
       </select>
@@ -62,25 +66,20 @@ export function StatusControls({
           }`}
         >
           {pending
-            ? "Updating..."
+            ? t("updating")
             : cancelling
-              ? "Cancel order (restores stock)"
+              ? t("cancelOrderRestore")
               : reinstating
-                ? "Reinstate order (re-deducts stock)"
-                : `Set to ${ORDER_STATUS_LABEL[selected].toLowerCase()}`}
+                ? t("reinstateOrder")
+                : t("setTo", { status: t(ORDER_STATUS_LABEL[selected]).toLowerCase() })}
         </button>
       )}
 
       {cancelling && changed && !pending && (
-        <p className="text-xs text-amber-600">
-          Cancelling returns all cases in this order to stock.
-        </p>
+        <p className="text-xs text-amber-600">{t("cancellingNote")}</p>
       )}
       {reinstating && !pending && (
-        <p className="text-xs text-amber-600">
-          Reinstating takes the cases back out of stock — it will fail if
-          stock has since run out.
-        </p>
+        <p className="text-xs text-amber-600">{t("reinstatingNote")}</p>
       )}
       {error && <p className="w-full text-sm text-red-600">{error}</p>}
     </div>

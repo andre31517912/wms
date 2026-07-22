@@ -1,5 +1,5 @@
-import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { DashboardView, type DashboardCardData } from "./DashboardView";
 
 export default async function AdminDashboardPage() {
   const [
@@ -30,35 +30,15 @@ export default async function AdminDashboardPage() {
   ).length;
   const outOfStockCount = items.filter((i) => i.stockCases <= 0).length;
 
-  const cards: { label: string; value: number; href: string; alert?: boolean }[] = [
-    { label: "Pending orders", value: pendingOrders, href: "/admin/orders?status=PENDING", alert: pendingOrders > 0 },
-    { label: "Approved customers", value: customerCount, href: "/admin/customers" },
-    { label: "Pending approvals", value: pendingCount, href: "/admin/customers", alert: pendingCount > 0 },
-    { label: "Products", value: productCount, href: "/admin/products" },
-    { label: "Active items", value: itemCount, href: "/admin/products" },
-    { label: "Low stock", value: lowStockCount, href: "/admin/products", alert: lowStockCount > 0 },
-    { label: "Out of stock", value: outOfStockCount, href: "/admin/products", alert: outOfStockCount > 0 },
+  const cards: DashboardCardData[] = [
+    { key: "pendingOrders", value: pendingOrders, href: "/admin/orders?status=PENDING", alert: pendingOrders > 0 },
+    { key: "approvedCustomers", value: customerCount, href: "/admin/customers" },
+    { key: "pendingApprovals", value: pendingCount, href: "/admin/customers", alert: pendingCount > 0 },
+    { key: "products", value: productCount, href: "/admin/products" },
+    { key: "activeItems", value: itemCount, href: "/admin/products" },
+    { key: "lowStock", value: lowStockCount, href: "/admin/products", alert: lowStockCount > 0 },
+    { key: "outOfStock", value: outOfStockCount, href: "/admin/products", alert: outOfStockCount > 0 },
   ];
 
-  return (
-    <div>
-      <h1 className="mb-6 text-2xl font-semibold text-gray-900">Dashboard</h1>
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-        {cards.map((c) => (
-          <Link
-            key={c.label}
-            href={c.href}
-            className="rounded-xl bg-white p-6 shadow-sm transition hover:shadow"
-          >
-            <p className="text-sm text-gray-500">{c.label}</p>
-            <p
-              className={`mt-1 text-3xl font-semibold ${c.alert ? "text-amber-600" : "text-gray-900"}`}
-            >
-              {c.value}
-            </p>
-          </Link>
-        ))}
-      </div>
-    </div>
-  );
+  return <DashboardView cards={cards} />;
 }

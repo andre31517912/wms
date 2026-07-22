@@ -3,6 +3,7 @@
 import { useState, useActionState } from "react";
 import type { StockLevel } from "@/lib/display";
 import { addToCart, type CartActionState } from "../../actions";
+import { useI18n, type TKey } from "@/lib/i18n";
 
 export type CatalogItem = {
   id: string;
@@ -17,10 +18,16 @@ export type CatalogItem = {
   imageIds: string[];
 };
 
-const LEVEL_BADGE: Record<StockLevel, [string, string]> = {
-  in_stock: ["In stock", "bg-green-100 text-green-800"],
-  low: ["Low stock", "bg-amber-100 text-amber-800"],
-  out: ["Out of stock", "bg-red-100 text-red-800"],
+const LEVEL_KEY: Record<StockLevel, TKey> = {
+  in_stock: "inStock",
+  low: "lowStock",
+  out: "outOfStock",
+};
+
+const LEVEL_CLS: Record<StockLevel, string> = {
+  in_stock: "bg-green-100 text-green-800",
+  low: "bg-amber-100 text-amber-800",
+  out: "bg-red-100 text-red-800",
 };
 
 export function ItemRow({
@@ -30,8 +37,8 @@ export function ItemRow({
   item: CatalogItem;
   canOrder: boolean;
 }) {
+  const { t } = useI18n();
   const [lightbox, setLightbox] = useState<number | null>(null);
-  const [label, badgeCls] = LEVEL_BADGE[item.level];
 
   return (
     <div className="flex flex-col gap-4 rounded-xl bg-white p-4 shadow-sm sm:flex-row">
@@ -66,9 +73,9 @@ export function ItemRow({
         <div className="flex flex-wrap items-center gap-2">
           <h2 className="font-medium text-gray-900">{item.name}</h2>
           <span
-            className={`rounded-full px-2 py-0.5 text-xs font-medium ${badgeCls}`}
+            className={`rounded-full px-2 py-0.5 text-xs font-medium ${LEVEL_CLS[item.level]}`}
           >
-            {label}
+            {t(LEVEL_KEY[item.level])}
           </span>
         </div>
         {item.detail && (
@@ -77,21 +84,21 @@ export function ItemRow({
         <dl className="mt-2 grid grid-cols-2 gap-x-6 gap-y-1 text-xs text-gray-500 sm:grid-cols-4">
           {item.sku && (
             <div>
-              <dt className="inline text-gray-400">SKU </dt>
+              <dt className="inline text-gray-400">{t("sku")} </dt>
               <dd className="inline font-mono">{item.sku}</dd>
             </div>
           )}
           <div>
-            <dt className="inline text-gray-400">Pieces/case </dt>
+            <dt className="inline text-gray-400">{t("piecesPerCase")} </dt>
             <dd className="inline">{item.piecesPerCase}</dd>
           </div>
           <div>
-            <dt className="inline text-gray-400">Case </dt>
+            <dt className="inline text-gray-400">{t("cases")} </dt>
             <dd className="inline">{item.dims} cm</dd>
           </div>
           <div>
-            <dt className="inline text-gray-400">Min order </dt>
-            <dd className="inline">{item.minOrderCases} case(s)</dd>
+            <dt className="inline text-gray-400">{t("minOrder")} </dt>
+            <dd className="inline">{item.minOrderCases} {t("caseUnit")}</dd>
           </div>
         </dl>
       </div>
@@ -99,7 +106,7 @@ export function ItemRow({
       {canOrder && (
         <div className="flex items-center sm:w-64">
           {item.level === "out" ? (
-            <p className="text-sm text-gray-400">Currently unavailable</p>
+            <p className="text-sm text-gray-400">{t("currentlyUnavailable")}</p>
           ) : (
             <AddToCartForm itemId={item.id} minOrder={item.minOrderCases} />
           )}
@@ -126,6 +133,7 @@ function AddToCartForm({
   itemId: string;
   minOrder: number;
 }) {
+  const { t } = useI18n();
   const [qty, setQty] = useState(minOrder);
   const [state, formAction, pending] = useActionState(
     async (prev: CartActionState, formData: FormData) => addToCart(prev, formData),
@@ -167,7 +175,7 @@ function AddToCartForm({
           disabled={pending}
           className="flex-1 rounded-lg bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
         >
-          {pending ? "Adding..." : "Add to cart"}
+          {pending ? t("adding") : t("addToCart")}
         </button>
       </div>
       <p className="mt-1 h-4 text-xs">
@@ -195,6 +203,7 @@ function Lightbox({
   onClose: () => void;
   alt: string;
 }) {
+  const { t } = useI18n();
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4"
@@ -227,7 +236,7 @@ function Lightbox({
               onClick={() => onIndex((index - 1 + imageIds.length) % imageIds.length)}
               className="rounded-lg bg-white/90 px-3 py-1 text-sm shadow"
             >
-              ← Prev
+              {t("prev")}
             </button>
             <span className="text-xs text-white">
               {index + 1} / {imageIds.length}
@@ -237,7 +246,7 @@ function Lightbox({
               onClick={() => onIndex((index + 1) % imageIds.length)}
               className="rounded-lg bg-white/90 px-3 py-1 text-sm shadow"
             >
-              Next →
+              {t("next")}
             </button>
           </div>
         )}

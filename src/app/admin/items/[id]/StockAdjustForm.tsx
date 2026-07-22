@@ -2,11 +2,13 @@
 
 import { useActionState } from "react";
 import { adjustStock } from "../../actions";
+import { useI18n } from "@/lib/i18n";
 
 const inputCls =
   "rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-900 focus:border-blue-500 focus:outline-none";
 
 export function StockAdjustForm({ itemId }: { itemId: string }) {
+  const { t } = useI18n();
   const [state, formAction, pending] = useActionState(adjustStock, null);
 
   return (
@@ -14,26 +16,26 @@ export function StockAdjustForm({ itemId }: { itemId: string }) {
       <input type="hidden" name="itemId" value={itemId} />
       <div>
         <label className="mb-1 block text-xs text-gray-500">
-          Cases (+ receive / − remove)
+          {t("casesReceiveRemove")}
         </label>
         <input
           name="deltaCases"
           type="number"
           required
-          placeholder="e.g. 50 or -3"
+          placeholder={t("casesPlaceholder")}
           className={`${inputCls} w-36`}
         />
       </div>
       <div>
-        <label className="mb-1 block text-xs text-gray-500">Reason</label>
+        <label className="mb-1 block text-xs text-gray-500">{t("reason")}</label>
         <select name="reason" required defaultValue="RECEIVING" className={inputCls}>
-          <option value="RECEIVING">Receiving</option>
-          <option value="CORRECTION">Correction</option>
-          <option value="DAMAGE">Damage</option>
+          <option value="RECEIVING">{t("receiving")}</option>
+          <option value="CORRECTION">{t("correction")}</option>
+          <option value="DAMAGE">{t("damage")}</option>
         </select>
       </div>
       <div className="min-w-48 flex-1">
-        <label className="mb-1 block text-xs text-gray-500">Note</label>
+        <label className="mb-1 block text-xs text-gray-500">{t("note")}</label>
         <input name="note" type="text" className={`${inputCls} w-full`} />
       </div>
       <button
@@ -41,7 +43,7 @@ export function StockAdjustForm({ itemId }: { itemId: string }) {
         disabled={pending}
         className="rounded-lg bg-blue-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
       >
-        Apply
+        {t("apply")}
       </button>
       {state && "error" in state && (
         <p className="w-full text-sm text-red-600" role="alert">

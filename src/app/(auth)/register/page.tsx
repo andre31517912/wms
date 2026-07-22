@@ -3,19 +3,20 @@
 import Link from "next/link";
 import { useActionState } from "react";
 import { register } from "../actions";
+import { useI18n } from "@/lib/i18n";
 
 export default function RegisterPage() {
   const [state, formAction, pending] = useActionState(register, null);
+  const { t } = useI18n();
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
       <div className="w-full max-w-sm rounded-xl bg-white p-8 shadow">
         <h1 className="mb-1 text-2xl font-semibold text-gray-900">
-          Create account
+          {t("createAccount")}
         </h1>
         <p className="mb-6 text-sm text-gray-500">
-          Your account will be reviewed and approved by the supplier before you
-          can place orders.
+          {t("accountReviewNote")}
         </p>
         <form action={formAction} className="space-y-4">
           <div>
@@ -23,7 +24,7 @@ export default function RegisterPage() {
               htmlFor="name"
               className="mb-1 block text-sm font-medium text-gray-700"
             >
-              Business / contact name
+              {t("businessName")}
             </label>
             <input
               id="name"
@@ -39,7 +40,7 @@ export default function RegisterPage() {
               htmlFor="email"
               className="mb-1 block text-sm font-medium text-gray-700"
             >
-              Email
+              {t("email")}
             </label>
             <input
               id="email"
@@ -55,7 +56,7 @@ export default function RegisterPage() {
               htmlFor="password"
               className="mb-1 block text-sm font-medium text-gray-700"
             >
-              Password
+              {t("password")}
             </label>
             <input
               id="password"
@@ -66,7 +67,7 @@ export default function RegisterPage() {
               minLength={8}
               className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none"
             />
-            <p className="mt-1 text-xs text-gray-400">At least 8 characters</p>
+            <p className="mt-1 text-xs text-gray-400">{t("passwordHint")}</p>
           </div>
           {state?.error && (
             <p className="text-sm text-red-600" role="alert">
@@ -78,13 +79,13 @@ export default function RegisterPage() {
             disabled={pending}
             className="w-full rounded-lg bg-blue-600 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
           >
-            {pending ? "Creating account..." : "Create account"}
+            {pending ? t("creatingAccount") : t("createAccount")}
           </button>
         </form>
         <p className="mt-6 text-center text-sm text-gray-500">
-          Already have an account?{" "}
+          {t("alreadyHaveAccount")}{" "}
           <Link href="/login" className="text-blue-600 hover:underline">
-            Sign in
+            {t("signIn")}
           </Link>
         </p>
       </div>

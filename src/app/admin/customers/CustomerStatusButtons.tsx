@@ -1,6 +1,7 @@
 "use client";
 
 import { useTransition } from "react";
+import { useI18n } from "@/lib/i18n";
 import { setCustomerStatus } from "../actions";
 
 export function CustomerStatusButtons({
@@ -10,6 +11,7 @@ export function CustomerStatusButtons({
   userId: string;
   status: "PENDING" | "APPROVED" | "DISABLED";
 }) {
+  const { t } = useI18n();
   const [pending, startTransition] = useTransition();
 
   const set = (next: "APPROVED" | "DISABLED") =>
@@ -24,7 +26,7 @@ export function CustomerStatusButtons({
           onClick={() => set("APPROVED")}
           className="rounded-lg bg-green-600 px-3 py-1 text-xs font-medium text-white hover:bg-green-700 disabled:opacity-50"
         >
-          {status === "PENDING" ? "Approve" : "Re-enable"}
+          {status === "PENDING" ? t("approve") : t("enable")}
         </button>
       )}
       {status !== "DISABLED" && (
@@ -34,7 +36,7 @@ export function CustomerStatusButtons({
           onClick={() => set("DISABLED")}
           className="rounded-lg border border-red-300 px-3 py-1 text-xs font-medium text-red-700 hover:bg-red-50 disabled:opacity-50"
         >
-          Disable
+          {t("disable")}
         </button>
       )}
     </span>

@@ -1,11 +1,14 @@
 import type { OrderStatus } from "@/generated/prisma/client";
+import type { TKey } from "@/lib/i18n";
 
-export const ORDER_STATUS_LABEL: Record<OrderStatus, string> = {
-  PENDING: "Pending",
-  CONFIRMED: "Confirmed",
-  OUT_FOR_DELIVERY: "Out for delivery",
-  DELIVERED: "Delivered",
-  CANCELLED: "Cancelled",
+// Values are i18n keys (see src/lib/i18n.tsx) — consumers must call
+// t(ORDER_STATUS_LABEL[status]) to get the display string.
+export const ORDER_STATUS_LABEL: Record<OrderStatus, TKey> = {
+  PENDING: "statusPending",
+  CONFIRMED: "statusConfirmed",
+  OUT_FOR_DELIVERY: "statusOutForDelivery",
+  DELIVERED: "statusDelivered",
+  CANCELLED: "statusCancelled",
 };
 
 export const ORDER_STATUS_BADGE: Record<OrderStatus, string> = {

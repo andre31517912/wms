@@ -40,6 +40,7 @@ model User {
   adjustments   StockAdjustment[]
   orders        Order[]
   cartLines     CartLine[]
+  batches       Batch[]
 
   @@map("users")
 }
@@ -78,10 +79,45 @@ model Item {
   images            ItemImage[]
   orderLines        OrderLine[]
   cartLines         CartLine[]
+  batches           Batch[]
 
   @@index([productId])
   @@index([sku])
   @@map("items")
+}
+
+/// Inbound stock lot — each import or receiving adjustment creates one.
+/// FIFO: orders drain from the oldest batch (by importedAt) first.
+model Batch {
+  id             String            @id @default(cuid())
+  batchNumber    String            @map("batch_number")
+  itemId         String            @map("item_id")
+  item           Item              @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  initialCases   Int               @map("initial_cases")
+  remainingCases Int               @map("remaining_cases")
+  importedAt     DateTime          @default(now()) @map("imported_at")
+  userId         String?           @map("user_id")
+  user           User?             @relation(fields: [userId], references: [id], onDelete: SetNull)
+  note           String?
+  allocations    BatchAllocation[]
+
+  @@unique([itemId, batchNumber])
+  @@index([itemId, importedAt])
+  @@map("batches")
+}
+
+/// Tracks which batches were drained for each order line (for cancellation reversal).
+model BatchAllocation {
+  id          String    @id @default(cuid())
+  batchId     String    @map("batch_id")
+  batch       Batch     @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  orderLineId String    @map("order_line_id")
+  orderLine   OrderLine @relation(fields: [orderLineId], references: [id], onDelete: Cascade)
+  qtyCases    Int       @map("qty_cases")
+
+  @@index([batchId])
+  @@index([orderLineId])
+  @@map("batch_allocations")
 }
 
 /// Item photo, stored in-DB as resized WebP (~800px). First by sortOrder = main image.
@@ -149,7 +185,8 @@ model OrderLine {
   snapshotName          String  @map("snapshot_name")
   snapshotSku           String? @map("snapshot_sku")
   snapshotProductName   String  @map("snapshot_product_name")
-  snapshotPiecesPerCase Int     @map("snapshot_pieces_per_case")
+  snapshotPiecesPerCase Int               @map("snapshot_pieces_per_case")
+  batchAllocations      BatchAllocation[]
 
   @@index([orderId])
   @@index([itemId])

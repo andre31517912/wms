@@ -7,6 +7,7 @@ import {
   makeMainItemImage,
   type ActionState,
 } from "../../actions";
+import { useI18n } from "@/lib/i18n";
 
 export type PhotoRef = { id: string };
 
@@ -17,6 +18,7 @@ export function ItemPhotos({
   itemId: string;
   photos: PhotoRef[];
 }) {
+  const { t } = useI18n();
   const fileRef = useRef<HTMLInputElement>(null);
   const uploadWithId = uploadItemImages.bind(null, itemId);
   const [state, formAction, uploading] = useActionState(
@@ -35,7 +37,7 @@ export function ItemPhotos({
     <div>
       {photos.length === 0 ? (
         <p className="mb-3 text-sm text-gray-400">
-          No photos yet. The first photo becomes the main image customers see.
+          {t("noPhotosYet")}
         </p>
       ) : (
         <div className="mb-4 flex flex-wrap gap-3">
@@ -50,7 +52,7 @@ export function ItemPhotos({
                 />
                 {i === 0 && (
                   <span className="absolute left-1 top-1 rounded bg-blue-600 px-1.5 py-0.5 text-[10px] font-medium text-white">
-                    Main
+                    {t("main")}
                   </span>
                 )}
               </div>
@@ -64,7 +66,7 @@ export function ItemPhotos({
                     }
                     className="text-xs text-blue-600 hover:underline disabled:opacity-50"
                   >
-                    Make main
+                    {t("makeMain")}
                   </button>
                 )}
                 <button
@@ -75,7 +77,7 @@ export function ItemPhotos({
                   }
                   className="text-xs text-red-600 hover:underline disabled:opacity-50"
                 >
-                  Delete
+                  {t("delete_")}
                 </button>
               </figcaption>
             </figure>
@@ -98,10 +100,10 @@ export function ItemPhotos({
           disabled={uploading}
           className="rounded-lg bg-blue-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
         >
-          {uploading ? "Uploading..." : "Upload"}
+          {uploading ? t("uploading") : t("upload")}
         </button>
         <span className="text-xs text-gray-400">
-          Up to 6 photos, JPEG/PNG/WebP/GIF, max 8 MB each — resized automatically
+          {t("photoLimits")}
         </span>
         {state && "error" in state && (
           <p className="w-full text-sm text-red-600" role="alert">

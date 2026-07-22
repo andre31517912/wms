@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { ProductsExplorer } from "./ProductsExplorer";
+import { ProductsView } from "./ProductsView";
 
 export default async function ProductsPage() {
   const products = await prisma.product.findMany({
@@ -25,12 +25,5 @@ export default async function ProductsPage() {
     },
   });
 
-  return (
-    <div>
-      <h1 className="mb-6 text-2xl font-semibold text-gray-900">
-        Products &amp; Items
-      </h1>
-      <ProductsExplorer products={products} />
-    </div>
-  );
+  return <ProductsView products={products} />;
 }

@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { stockLevel, type StockLevel } from "@/lib/display";
-import { CatalogGrid, type CatalogCard } from "./CatalogGrid";
+import { type CatalogCard } from "./CatalogGrid";
+import { CatalogPageView } from "./CatalogPageView";
 
 function aggregateLevel(levels: StockLevel[]): StockLevel {
   if (levels.length === 0 || levels.every((l) => l === "out")) return "out";
@@ -49,10 +50,5 @@ export default async function CatalogPage() {
         .toLowerCase(),
     }));
 
-  return (
-    <div>
-      <h1 className="mb-6 text-2xl font-semibold text-gray-900">Catalog</h1>
-      <CatalogGrid cards={cards} />
-    </div>
-  );
+  return <CatalogPageView cards={cards} />;
 }

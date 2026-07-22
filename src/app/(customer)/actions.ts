@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { requireApprovedCustomer } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { drainBatchesFifo } from "@/lib/batch";
 
 export type CartActionState = { error: string } | { success: string } | null;
 
@@ -173,7 +174,12 @@ export async function placeOrder(
         },
       });
 
-      for (const line of cartLines) {
+      const createdLines = await tx.orderLine.findMany({
+        where: { orderId: order.id },
+        select: { id: true, itemId: true, qtyCases: true },
+      });
+
+      for (const line of createdLines) {
         await tx.item.update({
           where: { id: line.itemId },
           data: { stockCases: { decrement: line.qtyCases } },
@@ -187,6 +193,17 @@ export async function placeOrder(
             note: orderNumber,
           },
         });
+
+        const drained = await drainBatchesFifo(tx, line.itemId, line.qtyCases);
+        for (const d of drained) {
+          await tx.batchAllocation.create({
+            data: {
+              batchId: d.batchId,
+              orderLineId: line.id,
+              qtyCases: d.qtyCases,
+            },
+          });
+        }
       }
 
       await tx.cartLine.deleteMany({ where: { userId: user.id } });

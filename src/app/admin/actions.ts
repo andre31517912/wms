@@ -12,6 +12,11 @@ import {
 } from "@/lib/validation";
 import { ORDER_STATUS_TRANSITIONS } from "@/lib/orderStatus";
 import { Prisma, type OrderStatus } from "@/generated/prisma/client";
+import {
+  createBatch,
+  drainBatchesFifo,
+  restoreBatchAllocations,
+} from "@/lib/batch";
 
 export type ActionState = { error: string } | { success: string } | null;
 
@@ -293,6 +298,10 @@ export async function updateOrderStatus(
             },
           });
         }
+        await restoreBatchAllocations(
+          tx,
+          order.lines.map((l) => l.id)
+        );
       } else if (order.status === "CANCELLED") {
         // Reinstating a cancelled order: take the stock back out, but only
         // if it's still available (someone may have ordered it meanwhile)
@@ -331,6 +340,17 @@ export async function updateOrderStatus(
               note: `${order.orderNumber} (reinstated)`,
             },
           });
+
+          const drained = await drainBatchesFifo(tx, line.itemId, line.qtyCases);
+          for (const d of drained) {
+            await tx.batchAllocation.create({
+              data: {
+                batchId: d.batchId,
+                orderLineId: line.id,
+                qtyCases: d.qtyCases,
+              },
+            });
+          }
         }
       }
 
@@ -411,7 +431,6 @@ export async function adjustStock(
 
   try {
     await prisma.$transaction(async (tx) => {
-      // Row lock so concurrent adjustments/orders serialize on this item
       const rows = await tx.$queryRaw<{ stock_cases: number }[]>`
         SELECT stock_cases FROM items WHERE id = ${itemId} FOR UPDATE`;
       if (rows.length === 0) throw new Error("ITEM_NOT_FOUND");
@@ -424,6 +443,17 @@ export async function adjustStock(
       await tx.stockAdjustment.create({
         data: { itemId, userId: admin.id, deltaCases, reason, note },
       });
+
+      if (deltaCases > 0) {
+        await createBatch(tx, {
+          itemId,
+          cases: deltaCases,
+          userId: admin.id,
+          note: note || reason,
+        });
+      } else if (deltaCases < 0) {
+        await drainBatchesFifo(tx, itemId, -deltaCases);
+      }
     });
   } catch (e) {
     if (e instanceof Error && e.message === "NEGATIVE") {
@@ -431,6 +461,9 @@ export async function adjustStock(
     }
     if (e instanceof Error && e.message === "ITEM_NOT_FOUND") {
       return { error: "Item not found" };
+    }
+    if (e instanceof Error && e.message === "BATCH_SHORTFALL") {
+      return { error: "Adjustment would make stock negative" };
     }
     throw e;
   }

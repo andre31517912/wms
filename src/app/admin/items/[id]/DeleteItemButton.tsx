@@ -2,8 +2,10 @@
 
 import { useState, useTransition } from "react";
 import { deleteItem } from "../../actions";
+import { useI18n } from "@/lib/i18n";
 
 export function DeleteItemButton({ itemId }: { itemId: string }) {
+  const { t } = useI18n();
   const [arming, setArming] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
@@ -15,7 +17,7 @@ export function DeleteItemButton({ itemId }: { itemId: string }) {
         onClick={() => setArming(true)}
         className="rounded-lg border border-red-300 px-3 py-1.5 text-sm text-red-700 hover:bg-red-50"
       >
-        Delete item
+        {t("deleteItem")}
       </button>
     );
   }
@@ -34,7 +36,7 @@ export function DeleteItemButton({ itemId }: { itemId: string }) {
         }
         className="rounded-lg bg-red-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50"
       >
-        {pending ? "Deleting..." : "Confirm delete"}
+        {pending ? t("deleting") : t("confirmDelete")}
       </button>
       <button
         type="button"
@@ -44,7 +46,7 @@ export function DeleteItemButton({ itemId }: { itemId: string }) {
         }}
         className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-100"
       >
-        Cancel
+        {t("cancel")}
       </button>
     </span>
   );

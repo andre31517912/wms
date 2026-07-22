@@ -2,6 +2,7 @@
 
 import { useActionState } from "react";
 import type { ActionState } from "../actions";
+import { useI18n } from "@/lib/i18n";
 
 export type ItemFormValues = {
   productId: string;
@@ -33,13 +34,14 @@ export function ItemForm({
   initial?: ItemFormValues;
   submitLabel: string;
 }) {
+  const { t } = useI18n();
   const [state, formAction, pending] = useActionState(action, null);
 
   return (
     <form action={formAction} className="space-y-6">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
-          <label className={labelCls}>Product *</label>
+          <label className={labelCls}>{t("productRequired")}</label>
           <select
             name="productId"
             required
@@ -47,7 +49,7 @@ export function ItemForm({
             className={inputCls}
           >
             <option value="" disabled>
-              Select product...
+              {t("selectProduct")}
             </option>
             {products.map((p) => (
               <option key={p.id} value={p.id}>
@@ -57,7 +59,7 @@ export function ItemForm({
           </select>
         </div>
         <div>
-          <label className={labelCls}>SKU / item code</label>
+          <label className={labelCls}>{t("skuItemCode")}</label>
           <input
             name="sku"
             type="text"
@@ -66,7 +68,7 @@ export function ItemForm({
           />
         </div>
         <div>
-          <label className={labelCls}>Name *</label>
+          <label className={labelCls}>{t("nameRequired")}</label>
           <input
             name="name"
             type="text"
@@ -76,7 +78,7 @@ export function ItemForm({
           />
         </div>
         <div>
-          <label className={labelCls}>Detail / spec</label>
+          <label className={labelCls}>{t("detailSpec")}</label>
           <input
             name="detail"
             type="text"
@@ -88,7 +90,7 @@ export function ItemForm({
 
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
         <div>
-          <label className={labelCls}>Unit weight (g)</label>
+          <label className={labelCls}>{t("unitWeightG")}</label>
           <input
             name="unitWeightG"
             type="number"
@@ -99,7 +101,7 @@ export function ItemForm({
           />
         </div>
         <div>
-          <label className={labelCls}>Pieces per case *</label>
+          <label className={labelCls}>{t("piecesPerCaseReq")}</label>
           <input
             name="piecesPerCase"
             type="number"
@@ -110,7 +112,7 @@ export function ItemForm({
           />
         </div>
         <div>
-          <label className={labelCls}>Min order (cases)</label>
+          <label className={labelCls}>{t("minOrderCases")}</label>
           <input
             name="minOrderCases"
             type="number"
@@ -120,7 +122,7 @@ export function ItemForm({
           />
         </div>
         <div>
-          <label className={labelCls}>Low-stock threshold</label>
+          <label className={labelCls}>{t("lowStockThreshold")}</label>
           <input
             name="lowStockThreshold"
             type="number"
@@ -132,7 +134,7 @@ export function ItemForm({
       </div>
 
       <div>
-        <label className={labelCls}>Case dimensions (cm)</label>
+        <label className={labelCls}>{t("caseDimensionsCm")}</label>
         <div className="flex items-center gap-2">
           <input
             name="caseLengthCm"
@@ -173,7 +175,7 @@ export function ItemForm({
           defaultChecked={initial?.isActive ?? true}
           className="h-4 w-4 rounded border-gray-300"
         />
-        Active (visible to customers)
+        {t("activeVisible")}
       </label>
 
       {state && "error" in state && (
@@ -190,7 +192,7 @@ export function ItemForm({
         disabled={pending}
         className="rounded-lg bg-blue-600 px-5 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
       >
-        {pending ? "Saving..." : submitLabel}
+        {pending ? t("saving") : submitLabel}
       </button>
     </form>
   );

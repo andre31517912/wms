@@ -3,16 +3,18 @@
 import Link from "next/link";
 import { useActionState } from "react";
 import { login } from "../actions";
+import { useI18n } from "@/lib/i18n";
 
 export default function LoginPage() {
   const [state, formAction, pending] = useActionState(login, null);
+  const { t } = useI18n();
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
       <div className="w-full max-w-sm rounded-xl bg-white p-8 shadow">
-        <h1 className="mb-1 text-2xl font-semibold text-gray-900">Sign in</h1>
+        <h1 className="mb-1 text-2xl font-semibold text-gray-900">{t("signIn")}</h1>
         <p className="mb-6 text-sm text-gray-500">
-          Warehouse ordering system
+          {t("warehouseOrdering")}
         </p>
         <form action={formAction} className="space-y-4">
           <div>
@@ -20,7 +22,7 @@ export default function LoginPage() {
               htmlFor="email"
               className="mb-1 block text-sm font-medium text-gray-700"
             >
-              Email
+              {t("email")}
             </label>
             <input
               id="email"
@@ -36,7 +38,7 @@ export default function LoginPage() {
               htmlFor="password"
               className="mb-1 block text-sm font-medium text-gray-700"
             >
-              Password
+              {t("password")}
             </label>
             <input
               id="password"
@@ -57,13 +59,13 @@ export default function LoginPage() {
             disabled={pending}
             className="w-full rounded-lg bg-blue-600 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
           >
-            {pending ? "Signing in..." : "Sign in"}
+            {pending ? t("signingIn") : t("signIn")}
           </button>
         </form>
         <p className="mt-6 text-center text-sm text-gray-500">
-          No account?{" "}
+          {t("noAccount")}{" "}
           <Link href="/register" className="text-blue-600 hover:underline">
-            Register
+            {t("register")}
           </Link>
         </p>
       </div>

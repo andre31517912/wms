@@ -3,7 +3,15 @@
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { parseSheet, type ImportRow } from "@/lib/import";
+import {
+  detectColumns,
+  suggestMapping,
+  parseSheetWithMapping,
+  type ImportRow,
+  type ColumnMapping,
+  type DetectedSheet,
+} from "@/lib/import";
+import { createBatch, drainBatchesFifo } from "@/lib/batch";
 
 const MAX_FILE_BYTES = 5 * 1024 * 1024;
 
@@ -14,11 +22,20 @@ export type RowPlan = {
   detail: string;
 };
 
+export type DetectState = {
+  detected: DetectedSheet;
+  suggestedMapping: ColumnMapping;
+  fileName: string;
+  error?: string;
+} | null;
+
 export type ImportState = {
   mode: "preview" | "import";
   fileName: string;
   parseErrors: string[];
   plans: RowPlan[];
+  rows?: ImportRow[];
+  existingProducts?: string[];
   summary: string;
   error?: string;
 } | null;
@@ -28,10 +45,6 @@ function rowLabel(row: ImportRow): string {
   return row.sku ? `${row.sku} — ${name}` : name;
 }
 
-/**
- * Preview and import share this walk so what you preview is what you get.
- * When execute=false nothing is written.
- */
 async function walkRows(
   rows: ImportRow[],
   execute: boolean,
@@ -56,7 +69,6 @@ async function walkRows(
 
   for (const row of rows) {
     try {
-      // --- resolve product (grouping) ---
       if (!row.productName) {
         plans.push({
           rowNumber: row.rowNumber,
@@ -76,14 +88,16 @@ async function walkRows(
             select: { id: true, name: true },
           });
         } else {
-          product = { id: `new:${row.productName.toLowerCase()}`, name: row.productName };
+          product = {
+            id: `new:${row.productName.toLowerCase()}`,
+            name: row.productName,
+          };
         }
         productByName.set(product.name.toLowerCase(), product);
         productsCreated++;
         productNote = ` (new product: ${row.productName})`;
       }
 
-      // --- resolve item ---
       const isNewProduct = product.id.startsWith("new:");
       let existing: { id: string; stockCases: number } | null = null;
       if (!isNewProduct) {
@@ -110,7 +124,9 @@ async function walkRows(
         minOrderCases: row.minOrderCases ?? 1,
       };
       const ppcNote =
-        row.piecesPerCase === null ? " (pieces/case missing, defaulted to 1)" : "";
+        row.piecesPerCase === null
+          ? " (pieces/case missing, defaulted to 1)"
+          : "";
 
       if (existing) {
         let stockNote = "";
@@ -118,12 +134,12 @@ async function walkRows(
           const delta = row.stockCases - existing.stockCases;
           stockNote = ` stock ${existing.stockCases} → ${row.stockCases}`;
           if (execute) {
-            await prisma.$transaction([
-              prisma.item.update({
+            await prisma.$transaction(async (tx) => {
+              await tx.item.update({
                 where: { id: existing.id },
-                data: { ...data, stockCases: row.stockCases },
-              }),
-              prisma.stockAdjustment.create({
+                data: { ...data, stockCases: row.stockCases! },
+              });
+              await tx.stockAdjustment.create({
                 data: {
                   itemId: existing.id,
                   userId: adminId,
@@ -131,8 +147,18 @@ async function walkRows(
                   reason: "IMPORT",
                   note: `Bulk import row ${row.rowNumber}`,
                 },
-              }),
-            ]);
+              });
+              if (delta > 0) {
+                await createBatch(tx, {
+                  itemId: existing.id,
+                  cases: delta,
+                  userId: adminId,
+                  note: `Import row ${row.rowNumber}`,
+                });
+              } else {
+                await drainBatchesFifo(tx, existing.id, -delta);
+              }
+            });
           }
         } else if (execute) {
           await prisma.item.update({ where: { id: existing.id }, data });
@@ -147,20 +173,32 @@ async function walkRows(
       } else {
         const initialStock = row.stockCases ?? 0;
         if (execute) {
-          const item = await prisma.item.create({
-            data: { ...data, productId: product.id, stockCases: initialStock },
-          });
-          if (initialStock > 0) {
-            await prisma.stockAdjustment.create({
+          await prisma.$transaction(async (tx) => {
+            const item = await tx.item.create({
               data: {
-                itemId: item.id,
-                userId: adminId,
-                deltaCases: initialStock,
-                reason: "IMPORT",
-                note: `Bulk import row ${row.rowNumber}`,
+                ...data,
+                productId: product.id,
+                stockCases: initialStock,
               },
             });
-          }
+            if (initialStock > 0) {
+              await tx.stockAdjustment.create({
+                data: {
+                  itemId: item.id,
+                  userId: adminId,
+                  deltaCases: initialStock,
+                  reason: "IMPORT",
+                  note: `Bulk import row ${row.rowNumber}`,
+                },
+              });
+              await createBatch(tx, {
+                itemId: item.id,
+                cases: initialStock,
+                userId: adminId,
+                note: `Import row ${row.rowNumber}`,
+              });
+            }
+          });
         }
         created++;
         plans.push({
@@ -183,6 +221,31 @@ async function walkRows(
   return { plans, created, updated, productsCreated };
 }
 
+export async function detectSheetColumns(
+  _prev: DetectState,
+  formData: FormData
+): Promise<DetectState> {
+  await requireAdmin();
+
+  const file = formData.get("file");
+  if (!(file instanceof File) || file.size === 0) {
+    return null;
+  }
+  if (file.size > MAX_FILE_BYTES) {
+    return null;
+  }
+
+  const buffer = Buffer.from(await file.arrayBuffer());
+
+  try {
+    const detected = detectColumns(buffer);
+    const suggestedMapping = suggestMapping(detected.headers);
+    return { detected, suggestedMapping, fileName: file.name };
+  } catch {
+    return null;
+  }
+}
+
 export async function importSheet(
   _prev: ImportState,
   formData: FormData
@@ -193,29 +256,57 @@ export async function importSheet(
   const file = formData.get("file");
   if (!(file instanceof File) || file.size === 0) {
     return {
-      mode, fileName: "", parseErrors: [], plans: [],
-      summary: "", error: "Choose an .xlsx or .csv file first",
+      mode,
+      fileName: "",
+      parseErrors: [],
+      plans: [],
+      summary: "",
+      error: "Choose an .xlsx or .csv file first",
     };
   }
   if (file.size > MAX_FILE_BYTES) {
     return {
-      mode, fileName: file.name, parseErrors: [], plans: [],
-      summary: "", error: "File too large (max 5 MB)",
+      mode,
+      fileName: file.name,
+      parseErrors: [],
+      plans: [],
+      summary: "",
+      error: "File too large (max 5 MB)",
     };
   }
 
   const buffer = Buffer.from(await file.arrayBuffer());
-  const { rows, errors } = parseSheet(buffer);
+
+  const mappingJson = formData.get("mapping");
+  const headerRowIndex = Number(formData.get("headerRowIndex") ?? "0");
+
+  let rows: ImportRow[];
+  let errors: string[];
+
+  if (mappingJson && typeof mappingJson === "string") {
+    const mapping: ColumnMapping = JSON.parse(mappingJson);
+    ({ rows, errors } = parseSheetWithMapping(buffer, mapping, headerRowIndex));
+  } else {
+    const { parseSheet } = await import("@/lib/import");
+    ({ rows, errors } = parseSheet(buffer));
+  }
+
   if (rows.length === 0) {
     return {
-      mode, fileName: file.name, parseErrors: errors, plans: [],
-      summary: "", error: "No importable rows found",
+      mode,
+      fileName: file.name,
+      parseErrors: errors,
+      plans: [],
+      summary: "",
+      error: "No importable rows found",
     };
   }
 
   const execute = mode === "import";
   const { plans, created, updated, productsCreated } = await walkRows(
-    rows, execute, admin.id
+    rows,
+    execute,
+    admin.id
   );
 
   if (execute) {
@@ -224,11 +315,58 @@ export async function importSheet(
   }
 
   const verb = execute ? "Imported" : "Would import";
-  return {
+  const result: ImportState = {
     mode,
     fileName: file.name,
     parseErrors: errors,
     plans,
     summary: `${verb}: ${created} new item(s), ${updated} updated, ${productsCreated} new product(s) (${rows.length} rows read)`,
+  };
+
+  if (mode === "preview") {
+    result.rows = rows;
+    const products = await prisma.product.findMany({
+      select: { name: true },
+      orderBy: { name: "asc" },
+    });
+    result.existingProducts = products.map((p) => p.name);
+  }
+
+  return result;
+}
+
+export async function importEditedRows(
+  rows: ImportRow[],
+  fileName: string
+): Promise<ImportState> {
+  const admin = await requireAdmin();
+
+  const valid = rows.filter((r) => r.name);
+  if (valid.length === 0) {
+    return {
+      mode: "import",
+      fileName,
+      parseErrors: [],
+      plans: [],
+      summary: "",
+      error: "No rows with an item name to import",
+    };
+  }
+
+  const { plans, created, updated, productsCreated } = await walkRows(
+    valid,
+    true,
+    admin.id
+  );
+
+  revalidatePath("/admin/items");
+  revalidatePath("/admin/products");
+
+  return {
+    mode: "import",
+    fileName,
+    parseErrors: [],
+    plans,
+    summary: `Imported: ${created} new item(s), ${updated} updated, ${productsCreated} new product(s) (${valid.length} rows)`,
   };
 }

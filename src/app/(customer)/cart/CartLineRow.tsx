@@ -6,6 +6,7 @@ import {
   removeCartLine,
   type CartActionState,
 } from "../actions";
+import { useI18n } from "@/lib/i18n";
 
 export function CartLineRow({
   line,
@@ -22,6 +23,7 @@ export function CartLineRow({
     imageId: string | null;
   };
 }) {
+  const { t } = useI18n();
   const [qty, setQty] = useState(line.qtyCases);
   const [removing, startRemove] = useTransition();
   const [state, formAction, saving] = useActionState(
@@ -31,11 +33,11 @@ export function CartLineRow({
   );
 
   const warning = !line.isActive
-    ? "No longer available — remove this line"
+    ? t("noLongerAvailable")
     : line.qtyCases > line.stockCases
-      ? `Only ${line.stockCases} case(s) in stock`
+      ? t("onlyNCasesInStock", { n: line.stockCases })
       : line.qtyCases < line.minOrderCases
-        ? `Minimum order is ${line.minOrderCases} cases`
+        ? t("minOrderIs", { n: line.minOrderCases })
         : null;
 
   return (
@@ -84,7 +86,7 @@ export function CartLineRow({
             disabled={saving}
             className="rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-50"
           >
-            {saving ? "..." : "Update"}
+            {saving ? "..." : t("update")}
           </button>
         )}
       </form>
@@ -95,7 +97,7 @@ export function CartLineRow({
         onClick={() => startRemove(() => removeCartLine(line.itemId))}
         className="text-sm text-red-600 hover:underline disabled:opacity-50"
       >
-        Remove
+        {t("remove")}
       </button>
     </div>
   );

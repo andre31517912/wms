@@ -9,6 +9,7 @@ import {
   type ActionState,
 } from "../actions";
 import { formatDims, stockLevel } from "@/lib/display";
+import { useI18n, type TKey } from "@/lib/i18n";
 
 export type ExplorerItem = {
   id: string;
@@ -38,16 +39,17 @@ const LEVEL_BADGE = {
   out: "bg-red-100 text-red-800",
 } as const;
 
-const LEVEL_LABEL = {
-  in_stock: "In stock",
-  low: "Low",
-  out: "Out",
-} as const;
+const LEVEL_KEY: Record<keyof typeof LEVEL_BADGE, TKey> = {
+  in_stock: "inStock",
+  low: "lowStock",
+  out: "outOfStock",
+};
 
 const inputCls =
   "rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-900 focus:border-blue-500 focus:outline-none";
 
 export function ProductsExplorer({ products }: { products: ExplorerProduct[] }) {
+  const { t } = useI18n();
   const [query, setQuery] = useState("");
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [showAdd, setShowAdd] = useState(false);
@@ -89,7 +91,7 @@ export function ProductsExplorer({ products }: { products: ExplorerProduct[] }) 
           type="search"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search products, items, SKUs..."
+          placeholder={t("searchPlaceholder")}
           className={`${inputCls} w-72`}
         />
         <button
@@ -97,13 +99,13 @@ export function ProductsExplorer({ products }: { products: ExplorerProduct[] }) 
           onClick={() => setShowAdd((s) => !s)}
           className="rounded-lg border border-blue-600 px-4 py-1.5 text-sm font-medium text-blue-700 hover:bg-blue-50"
         >
-          {showAdd ? "Close" : "+ Add product"}
+          {showAdd ? t("close") : t("addProduct")}
         </button>
         <Link
           href="/admin/items/new"
           className="rounded-lg bg-blue-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-blue-700"
         >
-          + Add item
+          + {t("addItem")}
         </Link>
       </div>
 
@@ -115,9 +117,7 @@ export function ProductsExplorer({ products }: { products: ExplorerProduct[] }) 
 
       {visible.length === 0 ? (
         <p className="text-sm text-gray-500">
-          {searching
-            ? "Nothing matches your search."
-            : "No products yet — add one above or use the bulk import."}
+          {searching ? t("noSearchMatch") : t("noProductsYet")}
         </p>
       ) : (
         <div className="space-y-2">
@@ -137,6 +137,7 @@ export function ProductsExplorer({ products }: { products: ExplorerProduct[] }) 
 }
 
 function NewProductForm({ onCreated }: { onCreated: () => void }) {
+  const { t } = useI18n();
   const [state, formAction, pending] = useActionState(
     async (prev: ActionState, formData: FormData) => {
       const result = await createProduct(prev, formData);
@@ -149,11 +150,11 @@ function NewProductForm({ onCreated }: { onCreated: () => void }) {
   return (
     <form action={formAction} className="flex flex-wrap items-end gap-3">
       <div>
-        <label className="mb-1 block text-xs text-gray-500">Name</label>
+        <label className="mb-1 block text-xs text-gray-500">{t("name")}</label>
         <input name="name" type="text" required className={`${inputCls} w-64`} />
       </div>
       <div>
-        <label className="mb-1 block text-xs text-gray-500">Sort order</label>
+        <label className="mb-1 block text-xs text-gray-500">{t("sortOrder")}</label>
         <input
           name="sortOrder"
           type="number"
@@ -167,7 +168,7 @@ function NewProductForm({ onCreated }: { onCreated: () => void }) {
         disabled={pending}
         className="rounded-lg bg-blue-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
       >
-        Add
+        {t("add")}
       </button>
       {state && "error" in state && (
         <p className="w-full text-sm text-red-600">{state.error}</p>
@@ -187,6 +188,7 @@ function ProductSection({
   open: boolean;
   onToggle: () => void;
 }) {
+  const { t } = useI18n();
   const [editing, setEditing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
@@ -215,7 +217,7 @@ function ProductSection({
         {editing ? (
           <form action={formAction} className="flex flex-1 flex-wrap items-end gap-3">
             <div>
-              <label className="mb-1 block text-xs text-gray-500">Name</label>
+              <label className="mb-1 block text-xs text-gray-500">{t("name")}</label>
               <input
                 name="name"
                 type="text"
@@ -225,7 +227,7 @@ function ProductSection({
               />
             </div>
             <div>
-              <label className="mb-1 block text-xs text-gray-500">Sort</label>
+              <label className="mb-1 block text-xs text-gray-500">{t("sort")}</label>
               <input
                 name="sortOrder"
                 type="number"
@@ -239,14 +241,14 @@ function ProductSection({
               disabled={saving}
               className="rounded-lg bg-blue-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
             >
-              Save
+              {t("save")}
             </button>
             <button
               type="button"
               onClick={() => setEditing(false)}
               className="rounded-lg border border-gray-300 px-4 py-1.5 text-sm text-gray-700 hover:bg-gray-100"
             >
-              Cancel
+              {t("cancel")}
             </button>
             {state && "error" in state && (
               <p className="w-full text-sm text-red-600">{state.error}</p>
@@ -265,7 +267,7 @@ function ProductSection({
             </span>
             <span className="font-medium text-gray-900">{product.name}</span>
             <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600">
-              {product.items.length} item{product.items.length === 1 ? "" : "s"}
+              {t("nItemsCount", { n: product.items.length })}
             </span>
           </button>
         )}
@@ -277,7 +279,7 @@ function ProductSection({
               onClick={() => setEditing(true)}
               className="rounded-lg border border-gray-300 px-3 py-1 text-xs text-gray-700 hover:bg-gray-100"
             >
-              Edit
+              {t("edit")}
             </button>
             <button
               type="button"
@@ -285,12 +287,12 @@ function ProductSection({
               onClick={onDelete}
               title={
                 product.items.length > 0
-                  ? "Move or delete its items first"
+                  ? t("moveOrDeleteFirst")
                   : undefined
               }
               className="rounded-lg border border-red-300 px-3 py-1 text-xs text-red-700 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-40"
             >
-              Delete
+              {t("delete_")}
             </button>
           </span>
         )}
@@ -300,19 +302,19 @@ function ProductSection({
         <div className="border-t border-gray-100">
           {items.length === 0 ? (
             <p className="px-4 py-3 text-sm text-gray-400">
-              No items under this product yet.
+              {t("noItemsUnderProduct")}
             </p>
           ) : (
             <table className="w-full text-left text-sm">
               <thead className="border-b border-gray-100 text-xs uppercase text-gray-500">
                 <tr>
-                  <th className="px-4 py-2">SKU</th>
-                  <th className="px-4 py-2">Item</th>
-                  <th className="px-4 py-2 text-right">Pcs/case</th>
-                  <th className="px-4 py-2 text-right">Case dims (cm)</th>
-                  <th className="px-4 py-2 text-right">Min order</th>
-                  <th className="px-4 py-2 text-right">Stock (cases)</th>
-                  <th className="px-4 py-2">Status</th>
+                  <th className="px-4 py-2">{t("sku")}</th>
+                  <th className="px-4 py-2">{t("item")}</th>
+                  <th className="px-4 py-2 text-right">{t("piecesPerCase")}</th>
+                  <th className="px-4 py-2 text-right">{t("caseDimsCm")}</th>
+                  <th className="px-4 py-2 text-right">{t("minOrder")}</th>
+                  <th className="px-4 py-2 text-right">{t("stockCases")}</th>
+                  <th className="px-4 py-2">{t("status")}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
@@ -350,7 +352,7 @@ function ProductSection({
                         <span
                           className={`rounded-full px-2 py-0.5 text-xs font-medium ${LEVEL_BADGE[level]}`}
                         >
-                          {item.isActive ? LEVEL_LABEL[level] : "Inactive"}
+                          {item.isActive ? t(LEVEL_KEY[level]) : t("inactive")}
                         </span>
                       </td>
                     </tr>
