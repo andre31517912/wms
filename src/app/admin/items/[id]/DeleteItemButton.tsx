@@ -15,7 +15,7 @@ export function DeleteItemButton({ itemId }: { itemId: string }) {
       <button
         type="button"
         onClick={() => setArming(true)}
-        className="rounded-lg border border-red-300 px-3 py-1.5 text-sm text-red-700 hover:bg-red-50"
+        className="rounded-lg border border-red-500/50 px-3 py-1.5 text-sm text-red-400 hover:bg-red-500/10"
       >
         {t("deleteItem")}
       </button>
@@ -24,7 +24,7 @@ export function DeleteItemButton({ itemId }: { itemId: string }) {
 
   return (
     <span className="inline-flex items-center gap-2">
-      {error && <span className="text-xs text-red-600">{error}</span>}
+      {error && <span className="text-xs text-red-400">{error}</span>}
       <button
         type="button"
         disabled={pending}
@@ -44,7 +44,7 @@ export function DeleteItemButton({ itemId }: { itemId: string }) {
           setArming(false);
           setError(null);
         }}
-        className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-100"
+        className="rounded-lg border border-admin-input-border px-3 py-1.5 text-sm text-admin-text-secondary hover:bg-admin-surface-hover"
       >
         {t("cancel")}
       </button>

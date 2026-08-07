@@ -48,7 +48,7 @@ export function OrdersView({
 
   return (
     <div>
-      <h1 className="mb-6 text-2xl font-semibold text-gray-900">
+      <h1 className="mb-6 text-2xl font-semibold">
         {t("orders")}
         {selectedCustomerName ? ` — ${selectedCustomerName}` : ""}
       </h1>
@@ -75,17 +75,17 @@ export function OrdersView({
       {/* Customer + date filters (GET form) */}
       <form
         method="GET"
-        className="mb-6 flex flex-wrap items-end gap-3 rounded-xl bg-white p-4 shadow-sm"
+        className="mb-6 flex flex-wrap items-end gap-3 rounded-xl bg-admin-surface p-4 ring-1 ring-white/5"
       >
         {status && <input type="hidden" name="status" value={status} />}
         <div>
-          <label className="mb-1 block text-xs text-gray-500">
+          <label className="mb-1 block text-xs text-admin-text-muted">
             {t("customer")}
           </label>
           <select
             name="customer"
             defaultValue={customerId ?? ""}
-            className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-900"
+            className="rounded-lg border border-admin-input-border bg-admin-input-bg px-3 py-1.5 text-sm text-admin-text"
           >
             <option value="">{t("allCustomers")}</option>
             {customers.map((c) => (
@@ -96,23 +96,23 @@ export function OrdersView({
           </select>
         </div>
         <div>
-          <label className="mb-1 block text-xs text-gray-500">
+          <label className="mb-1 block text-xs text-admin-text-muted">
             {t("from")}
           </label>
           <input
             type="date"
             name="from"
             defaultValue={from}
-            className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-900"
+            className="rounded-lg border border-admin-input-border bg-admin-input-bg px-3 py-1.5 text-sm text-admin-text"
           />
         </div>
         <div>
-          <label className="mb-1 block text-xs text-gray-500">{t("to")}</label>
+          <label className="mb-1 block text-xs text-admin-text-muted">{t("to")}</label>
           <input
             type="date"
             name="to"
             defaultValue={to}
-            className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-900"
+            className="rounded-lg border border-admin-input-border bg-admin-input-bg px-3 py-1.5 text-sm text-admin-text"
           />
         </div>
         <button
@@ -123,18 +123,18 @@ export function OrdersView({
         </button>
         <Link
           href="/admin/orders"
-          className="text-sm text-gray-500 hover:underline"
+          className="text-sm text-admin-text-muted hover:underline"
         >
           {t("clear")}
         </Link>
       </form>
 
       {orders.length === 0 ? (
-        <p className="text-sm text-gray-500">{t("noOrdersMatch")}</p>
+        <p className="text-sm text-admin-text-muted">{t("noOrdersMatch")}</p>
       ) : (
-        <div className="overflow-x-auto rounded-xl bg-white shadow-sm">
+        <div className="overflow-x-auto rounded-xl bg-admin-surface ring-1 ring-white/5">
           <table className="w-full text-left text-sm">
-            <thead className="border-b border-gray-200 text-xs uppercase text-gray-500">
+            <thead className="border-b border-admin-border text-xs uppercase text-admin-text-muted">
               <tr>
                 <th className="px-4 py-3">{t("order")}</th>
                 <th className="px-4 py-3">{t("customer")}</th>
@@ -145,18 +145,18 @@ export function OrdersView({
                 <th className="px-4 py-3">{t("delivery")}</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-admin-border-subtle">
               {orders.map((o) => (
-                <tr key={o.id}>
+                <tr key={o.id} className="hover:bg-admin-surface-hover">
                   <td className="px-4 py-3">
                     <Link
                       href={`/admin/orders/${o.id}`}
-                      className="font-medium text-blue-700 hover:underline"
+                      className="font-medium text-admin-accent hover:underline"
                     >
                       {o.orderNumber}
                     </Link>
                   </td>
-                  <td className="px-4 py-3 text-gray-700">
+                  <td className="px-4 py-3 text-admin-text-secondary">
                     <Link
                       href={`/admin/orders?customer=${o.customerId}`}
                       className="hover:underline"
@@ -164,19 +164,19 @@ export function OrdersView({
                       {o.customerName}
                     </Link>
                   </td>
-                  <td className="px-4 py-3 text-gray-500">
+                  <td className="px-4 py-3 text-admin-text-muted">
                     {o.createdAtLabel}
                   </td>
-                  <td className="px-4 py-3 text-right text-gray-500">
+                  <td className="px-4 py-3 text-right text-admin-text-muted">
                     {o.lineCount}
                   </td>
-                  <td className="px-4 py-3 text-right text-gray-700">
+                  <td className="px-4 py-3 text-right">
                     {o.caseTotal}
                   </td>
                   <td className="px-4 py-3">
                     <OrderStatusBadge status={o.status} />
                   </td>
-                  <td className="px-4 py-3 text-gray-500">
+                  <td className="px-4 py-3 text-admin-text-muted">
                     {o.deliveryDateLabel ?? "—"}
                   </td>
                 </tr>
@@ -211,7 +211,7 @@ function FilterLink({
   return (
     <Link
       href={href}
-      className={`rounded-full px-3 py-1 text-xs font-medium ${active ? "bg-blue-600 text-white" : "bg-white text-gray-700 shadow-sm hover:bg-gray-100"}`}
+      className={`rounded-full px-3 py-1 text-xs font-medium ${active ? "bg-blue-600 text-white" : "bg-admin-surface text-admin-text-secondary ring-1 ring-white/5 hover:bg-admin-surface-hover"}`}
     >
       {children}
     </Link>

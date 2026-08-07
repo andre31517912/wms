@@ -22,7 +22,7 @@ export function DeliveryDateForm({
         type="date"
         name="deliveryDate"
         defaultValue={current}
-        className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-900"
+        className="rounded-lg border border-admin-input-border bg-admin-input-bg px-3 py-1.5 text-sm text-admin-text"
       />
       <button
         type="submit"
@@ -32,10 +32,10 @@ export function DeliveryDateForm({
         {pending ? "..." : "Save"}
       </button>
       {state && "error" in state && (
-        <p className="w-full text-xs text-red-600">{state.error}</p>
+        <p className="w-full text-xs text-red-400">{state.error}</p>
       )}
       {state && "success" in state && (
-        <p className="w-full text-xs text-green-600">{state.success}</p>
+        <p className="w-full text-xs text-emerald-400">{state.success}</p>
       )}
     </form>
   );

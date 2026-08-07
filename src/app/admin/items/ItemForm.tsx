@@ -20,8 +20,8 @@ export type ItemFormValues = {
 };
 
 const inputCls =
-  "w-full rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-900 focus:border-blue-500 focus:outline-none";
-const labelCls = "mb-1 block text-xs text-gray-500";
+  "w-full rounded-lg border border-admin-input-border bg-admin-input-bg px-3 py-1.5 text-sm text-admin-text focus:border-admin-accent focus:outline-none";
+const labelCls = "mb-1 block text-xs text-admin-text-muted";
 
 export function ItemForm({
   action,
@@ -145,7 +145,7 @@ export function ItemForm({
             defaultValue={initial?.caseLengthCm ?? ""}
             className={`${inputCls} w-24`}
           />
-          <span className="text-gray-400">×</span>
+          <span className="text-admin-text-muted">×</span>
           <input
             name="caseWidthCm"
             type="number"
@@ -155,7 +155,7 @@ export function ItemForm({
             defaultValue={initial?.caseWidthCm ?? ""}
             className={`${inputCls} w-24`}
           />
-          <span className="text-gray-400">×</span>
+          <span className="text-admin-text-muted">×</span>
           <input
             name="caseHeightCm"
             type="number"
@@ -168,23 +168,23 @@ export function ItemForm({
         </div>
       </div>
 
-      <label className="flex items-center gap-2 text-sm text-gray-700">
+      <label className="flex items-center gap-2 text-sm text-admin-text-secondary">
         <input
           name="isActive"
           type="checkbox"
           defaultChecked={initial?.isActive ?? true}
-          className="h-4 w-4 rounded border-gray-300"
+          className="h-4 w-4 rounded border-admin-input-border"
         />
         {t("activeVisible")}
       </label>
 
       {state && "error" in state && (
-        <p className="text-sm text-red-600" role="alert">
+        <p className="text-sm text-red-400" role="alert">
           {state.error}
         </p>
       )}
       {state && "success" in state && (
-        <p className="text-sm text-green-600">{state.success}</p>
+        <p className="text-sm text-emerald-400">{state.success}</p>
       )}
 
       <button

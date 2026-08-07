@@ -13,13 +13,13 @@ export function NewItemView({
 
   return (
     <div className="max-w-3xl">
-      <h1 className="mb-6 text-2xl font-semibold text-gray-900">
+      <h1 className="mb-6 text-2xl font-semibold">
         {t("addItem")}
       </h1>
       {products.length === 0 ? (
-        <p className="text-sm text-gray-500">{t("createProductFirst")}</p>
+        <p className="text-sm text-admin-text-muted">{t("createProductFirst")}</p>
       ) : (
-        <div className="rounded-xl bg-white p-6 shadow-sm">
+        <div className="rounded-xl bg-admin-surface p-6 ring-1 ring-white/5">
           <ItemForm
             action={createItem}
             products={products}

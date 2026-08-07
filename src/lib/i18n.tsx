@@ -50,6 +50,15 @@ const t = {
   lowStock:           { en: "Low stock",           zh: "库存偏低" },
   outOfStock:         { en: "Out of stock",        zh: "缺货" },
 
+  // ── Sidebar / Dashboard extras ──
+  inventory:          { en: "Inventory",           zh: "库存" },
+  recentOrders:       { en: "Recent Orders",       zh: "最近订单" },
+  stockAlerts:        { en: "Stock Alerts",        zh: "库存预警" },
+  allProducts:        { en: "All Products",        zh: "所有产品" },
+  allLevels:          { en: "All Levels",          zh: "所有等级" },
+  healthy:            { en: "Healthy",             zh: "正常" },
+  viewAll:            { en: "View all",            zh: "查看全部" },
+
   // ── Orders ──
   order:              { en: "Order",               zh: "订单" },
   placed:             { en: "Placed",              zh: "下单时间" },
@@ -364,7 +373,7 @@ export function LangToggle() {
     <button
       type="button"
       onClick={() => setLang(lang === "en" ? "zh" : "en")}
-      className="rounded-md border border-gray-300 px-2 py-1 text-xs font-medium text-gray-600 hover:bg-gray-100"
+      className="rounded-md border border-admin-input-border px-2 py-1 text-xs font-medium text-admin-text-secondary hover:bg-admin-surface-hover"
       title={lang === "en" ? "切换中文" : "Switch to English"}
     >
       {lang === "en" ? "中文" : "EN"}

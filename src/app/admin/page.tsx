@@ -1,14 +1,15 @@
 import { prisma } from "@/lib/prisma";
-import { DashboardView, type DashboardCardData } from "./DashboardView";
+import { DashboardView } from "./DashboardView";
 
 export default async function AdminDashboardPage() {
   const [
     customerCount,
     pendingCount,
-    itemCount,
+    allItems,
     productCount,
-    items,
     pendingOrders,
+    activeOrderCount,
+    recentOrders,
   ] = await Promise.all([
     prisma.user.count({
       where: { role: "CUSTOMER", accountStatus: "APPROVED" },
@@ -16,29 +17,87 @@ export default async function AdminDashboardPage() {
     prisma.user.count({
       where: { role: "CUSTOMER", accountStatus: "PENDING" },
     }),
-    prisma.item.count({ where: { isActive: true } }),
-    prisma.product.count(),
     prisma.item.findMany({
       where: { isActive: true },
-      select: { stockCases: true, lowStockThreshold: true },
+      select: {
+        id: true,
+        name: true,
+        sku: true,
+        stockCases: true,
+        lowStockThreshold: true,
+        piecesPerCase: true,
+        updatedAt: true,
+        product: { select: { name: true } },
+      },
+      orderBy: { name: "asc" },
     }),
+    prisma.product.count(),
     prisma.order.count({ where: { status: "PENDING" } }),
+    prisma.order.count({
+      where: { status: { in: ["PENDING", "CONFIRMED", "OUT_FOR_DELIVERY"] } },
+    }),
+    prisma.order.findMany({
+      orderBy: { createdAt: "desc" },
+      take: 10,
+      select: {
+        id: true,
+        orderNumber: true,
+        status: true,
+        createdAt: true,
+        customer: { select: { name: true } },
+        lines: { select: { qtyCases: true } },
+      },
+    }),
   ]);
 
-  const lowStockCount = items.filter(
-    (i) => i.stockCases > 0 && i.stockCases <= i.lowStockThreshold
-  ).length;
-  const outOfStockCount = items.filter((i) => i.stockCases <= 0).length;
+  const itemCount = allItems.length;
+  const lowStockItems = allItems.filter(
+    (i) => i.stockCases > 0 && i.stockCases <= i.lowStockThreshold,
+  );
+  const outOfStockItems = allItems.filter((i) => i.stockCases <= 0);
 
-  const cards: DashboardCardData[] = [
-    { key: "pendingOrders", value: pendingOrders, href: "/admin/orders?status=PENDING", alert: pendingOrders > 0 },
-    { key: "approvedCustomers", value: customerCount, href: "/admin/customers" },
-    { key: "pendingApprovals", value: pendingCount, href: "/admin/customers", alert: pendingCount > 0 },
-    { key: "products", value: productCount, href: "/admin/products" },
-    { key: "activeItems", value: itemCount, href: "/admin/products" },
-    { key: "lowStock", value: lowStockCount, href: "/admin/products", alert: lowStockCount > 0 },
-    { key: "outOfStock", value: outOfStockCount, href: "/admin/products", alert: outOfStockCount > 0 },
-  ];
+  const inventoryItems = allItems.map((i) => ({
+    id: i.id,
+    name: i.name,
+    sku: i.sku,
+    productName: i.product.name,
+    stockCases: i.stockCases,
+    lowStockThreshold: i.lowStockThreshold,
+    piecesPerCase: i.piecesPerCase,
+    updatedAt: i.updatedAt.toISOString(),
+  }));
 
-  return <DashboardView cards={cards} />;
+  const orders = recentOrders.map((o) => ({
+    id: o.id,
+    orderNumber: o.orderNumber,
+    status: o.status,
+    customerName: o.customer.name,
+    totalCases: o.lines.reduce((s, l) => s + l.qtyCases, 0),
+    createdAt: o.createdAt.toISOString(),
+  }));
+
+  const stockAlerts = [...outOfStockItems, ...lowStockItems].slice(0, 8).map((i) => ({
+    id: i.id,
+    name: i.name,
+    productName: i.product.name,
+    stockCases: i.stockCases,
+    lowStockThreshold: i.lowStockThreshold,
+  }));
+
+  const products = [...new Set(allItems.map((i) => i.product.name))].sort();
+
+  return (
+    <DashboardView
+      stats={{
+        totalInventory: itemCount,
+        lowStock: lowStockItems.length + outOfStockItems.length,
+        activeOrders: activeOrderCount,
+        pendingApprovals: pendingCount,
+      }}
+      inventoryItems={inventoryItems}
+      recentOrders={orders}
+      stockAlerts={stockAlerts}
+      productNames={products}
+    />
+  );
 }

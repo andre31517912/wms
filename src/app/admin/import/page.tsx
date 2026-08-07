@@ -8,10 +8,10 @@ export default function ImportPage() {
 
   return (
     <div className="max-w-4xl">
-      <h1 className="mb-2 text-2xl font-semibold text-gray-900">
+      <h1 className="mb-2 text-2xl font-semibold">
         {t("bulkImport")}
       </h1>
-      <p className="mb-6 text-sm text-gray-500">
+      <p className="mb-6 text-sm text-admin-text-muted">
         {t("importDescription")}
       </p>
       <ImportForm />

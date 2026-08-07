@@ -12,9 +12,9 @@ import {
 import { useI18n, type TKey } from "@/lib/i18n";
 
 const ACTION_BADGE = {
-  create: "bg-green-100 text-green-800",
-  update: "bg-blue-100 text-blue-800",
-  error: "bg-red-100 text-red-800",
+  create: "bg-emerald-500/20 text-emerald-400",
+  update: "bg-blue-500/20 text-blue-400",
+  error: "bg-red-500/20 text-red-400",
 } as const;
 
 const ACTION_LABEL_KEY: Record<keyof typeof ACTION_BADGE, TKey> = {
@@ -38,10 +38,10 @@ const FIELD_LABEL_KEY: Record<ImportFieldKey, TKey> = {
 };
 
 const selectCls =
-  "rounded-lg border border-gray-300 bg-white px-2 py-1.5 text-sm text-gray-900 focus:border-blue-500 focus:outline-none";
+  "rounded-lg border border-admin-input-border bg-admin-input-bg px-2 py-1.5 text-sm text-admin-text focus:border-admin-accent focus:outline-none";
 
 const cellInputCls =
-  "w-full border-0 bg-transparent px-1 py-0.5 text-sm text-gray-900 focus:bg-blue-50 focus:ring-1 focus:ring-blue-300 focus:outline-none rounded";
+  "w-full border-0 bg-transparent px-1 py-0.5 text-sm text-admin-text focus:bg-admin-accent/10 focus:ring-1 focus:ring-admin-accent focus:outline-none rounded";
 
 type Step = "upload" | "map" | "preview" | "done";
 
@@ -89,7 +89,7 @@ function ProductInput({
         className={`${cellInputCls} min-w-32`}
       />
       {open && focused && filtered.length > 0 && (
-        <ul className="absolute left-0 z-20 mt-0.5 max-h-40 w-56 overflow-auto rounded-lg border border-gray-200 bg-white py-1 text-sm shadow-lg">
+        <ul className="absolute left-0 z-20 mt-0.5 max-h-40 w-56 overflow-auto rounded-lg border border-admin-border bg-admin-surface py-1 text-sm shadow-lg">
           {filtered.map((name) => (
             <li
               key={name}
@@ -97,7 +97,7 @@ function ProductInput({
                 onChange(name);
                 setOpen(false);
               }}
-              className="cursor-pointer truncate px-2 py-1 hover:bg-blue-50"
+              className="cursor-pointer truncate px-2 py-1 hover:bg-admin-surface-hover"
             >
               {name}
             </li>
@@ -217,7 +217,7 @@ export function ImportForm() {
   return (
     <div className="space-y-6">
       {/* Step 1: Upload */}
-      <div className="rounded-xl bg-white p-6 shadow-sm">
+      <div className="rounded-xl bg-admin-surface p-6 ring-1 ring-white/5">
         <div className="flex flex-wrap items-center gap-3">
           <input
             ref={fileRef}
@@ -226,7 +226,7 @@ export function ImportForm() {
             onChange={() => {
               if (step !== "upload") resetForm();
             }}
-            className="text-sm text-gray-700 file:mr-3 file:rounded-lg file:border-0 file:bg-gray-100 file:px-4 file:py-2 file:text-sm file:font-medium file:text-gray-700 hover:file:bg-gray-200"
+            className="text-sm text-admin-text-secondary file:mr-3 file:rounded-lg file:border-0 file:bg-admin-surface-hover file:px-4 file:py-2 file:text-sm file:font-medium file:text-admin-text hover:file:bg-admin-border"
           />
           <button
             type="button"
@@ -241,12 +241,12 @@ export function ImportForm() {
 
       {/* Step 2: Column mapping */}
       {step === "map" && detected && (
-        <div className="rounded-xl bg-white shadow-sm">
-          <div className="border-b border-gray-100 px-6 py-4">
-            <p className="text-sm font-medium text-gray-900">
+        <div className="rounded-xl bg-admin-surface ring-1 ring-white/5">
+          <div className="border-b border-admin-border-subtle px-6 py-4">
+            <p className="text-sm font-medium">
               {t("mapColumnsToFields")}
             </p>
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-admin-text-muted">
               {t("columnsDetected", {
                 n: detected.headers.filter((h) => h).length,
               })}{" "}
@@ -256,34 +256,34 @@ export function ImportForm() {
           </div>
 
           {/* Sample data preview */}
-          <div className="overflow-x-auto border-b border-gray-100">
+          <div className="overflow-x-auto border-b border-admin-border-subtle">
             <table className="w-full text-left text-xs">
-              <thead className="bg-gray-50 text-gray-500">
+              <thead className="bg-admin-surface-hover text-admin-text-muted">
                 <tr>
                   {detected.headers.map((h, i) => (
                     <th
                       key={i}
                       className="whitespace-nowrap px-3 py-2 font-medium"
                     >
-                      <span className="mr-1 text-gray-300">
+                      <span className="mr-1 text-admin-text-muted">
                         {String.fromCharCode(65 + i)}
                       </span>
                       {h || (
-                        <span className="italic text-gray-300">{t("empty")}</span>
+                        <span className="italic text-admin-text-muted">{t("empty")}</span>
                       )}
                     </th>
                   ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-50">
+              <tbody className="divide-y divide-admin-border-subtle">
                 {detected.sampleRows.map((row, ri) => (
                   <tr key={ri}>
                     {row.map((cell, ci) => (
                       <td
                         key={ci}
-                        className="max-w-48 truncate whitespace-nowrap px-3 py-1.5 text-gray-600"
+                        className="max-w-48 truncate whitespace-nowrap px-3 py-1.5 text-admin-text-secondary"
                       >
-                        {cell ?? <span className="text-gray-300">—</span>}
+                        {cell ?? <span className="text-admin-text-muted">—</span>}
                       </td>
                     ))}
                   </tr>
@@ -295,7 +295,7 @@ export function ImportForm() {
           {/* Field mapping dropdowns */}
           <div className="px-6 py-5">
             {mapping.name === undefined && (
-              <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+              <div className="mb-4 rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-400">
                 {t("selectItemName")}
               </div>
             )}
@@ -307,12 +307,12 @@ export function ImportForm() {
                 return (
                   <div
                     key={field.key}
-                    className={`flex items-center gap-3 rounded-lg px-3 py-2 ${isMissing ? "bg-amber-50 ring-1 ring-amber-300" : ""}`}
+                    className={`flex items-center gap-3 rounded-lg px-3 py-2 ${isMissing ? "bg-amber-500/10 ring-1 ring-amber-500/30" : ""}`}
                   >
-                    <label className="w-40 shrink-0 text-sm font-medium text-gray-700">
+                    <label className="w-40 shrink-0 text-sm font-medium text-admin-text-secondary">
                       {t(FIELD_LABEL_KEY[field.key])}
                       {field.key === "name" && (
-                        <span className="text-red-500"> *</span>
+                        <span className="text-red-400"> *</span>
                       )}
                     </label>
                     <select
@@ -351,7 +351,7 @@ export function ImportForm() {
               <button
                 type="button"
                 onClick={resetForm}
-                className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50"
+                className="rounded-lg border border-admin-input-border px-4 py-2 text-sm font-medium text-admin-text-secondary hover:bg-admin-surface-hover"
               >
                 {t("startOver")}
               </button>
@@ -364,12 +364,12 @@ export function ImportForm() {
       {step === "preview" && importState && (
         <div className="space-y-4">
           {importState.error && (
-            <div className="rounded-xl bg-white p-6 shadow-sm">
-              <p className="text-sm text-red-600">{importState.error}</p>
+            <div className="rounded-xl bg-admin-surface p-6 ring-1 ring-white/5">
+              <p className="text-sm text-red-400">{importState.error}</p>
               <button
                 type="button"
                 onClick={() => setStep("map")}
-                className="mt-3 rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50"
+                className="mt-3 rounded-lg border border-admin-input-border px-4 py-2 text-sm font-medium text-admin-text-secondary hover:bg-admin-surface-hover"
               >
                 {t("backToMapping")}
               </button>
@@ -377,23 +377,23 @@ export function ImportForm() {
           )}
 
           {!importState.error && editedRows.length > 0 && (
-            <div className="rounded-xl bg-white shadow-sm">
-              <div className="border-b border-gray-100 px-6 py-4">
-                <p className="text-sm font-medium text-gray-900">
+            <div className="rounded-xl bg-admin-surface ring-1 ring-white/5">
+              <div className="border-b border-admin-border-subtle px-6 py-4">
+                <p className="text-sm font-medium">
                   {t("preview")} — {importState.summary}
                 </p>
-                <p className="text-xs text-gray-400">{importState.fileName}</p>
-                <p className="mt-1 text-xs text-amber-600">
+                <p className="text-xs text-admin-text-muted">{importState.fileName}</p>
+                <p className="mt-1 text-xs text-amber-400">
                   {t("editBeforeImport")}
                 </p>
               </div>
 
               {importState.parseErrors.length > 0 && (
-                <div className="border-b border-gray-100 px-6 py-3">
-                  <p className="mb-1 text-xs font-medium text-red-700">
+                <div className="border-b border-admin-border-subtle px-6 py-3">
+                  <p className="mb-1 text-xs font-medium text-red-400">
                     {t("skippedRows")}
                   </p>
-                  <ul className="list-inside list-disc text-xs text-red-600">
+                  <ul className="list-inside list-disc text-xs text-red-400">
                     {importState.parseErrors.map((e, i) => (
                       <li key={i}>{e}</li>
                     ))}
@@ -403,7 +403,7 @@ export function ImportForm() {
 
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-sm">
-                  <thead className="border-b border-gray-100 text-xs uppercase text-gray-500">
+                  <thead className="border-b border-admin-border text-xs uppercase text-admin-text-muted">
                     <tr>
                       <th className="px-2 py-2 text-center">{t("colRow")}</th>
                       <th className="px-2 py-2">{t("colProduct")}</th>
@@ -420,14 +420,14 @@ export function ImportForm() {
                       <th className="px-2 py-2">{t("colAction")}</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-50">
+                  <tbody className="divide-y divide-admin-border-subtle">
                     {editedRows.map((row, idx) => {
                       const plan = importState.plans.find(
                         (p) => p.rowNumber === row.rowNumber
                       );
                       return (
-                        <tr key={row.rowNumber} className="hover:bg-gray-50/50">
-                          <td className="px-2 py-1 text-center text-xs text-gray-400">
+                        <tr key={row.rowNumber} className="hover:bg-admin-surface-hover/50">
+                          <td className="px-2 py-1 text-center text-xs text-admin-text-muted">
                             {row.rowNumber}
                           </td>
                           <td className="px-1 py-1">
@@ -572,14 +572,14 @@ export function ImportForm() {
             <button
               type="button"
               onClick={() => setStep("map")}
-              className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50"
+              className="rounded-lg border border-admin-input-border px-4 py-2 text-sm font-medium text-admin-text-secondary hover:bg-admin-surface-hover"
             >
               {t("backToMapping")}
             </button>
             <button
               type="button"
               onClick={resetForm}
-              className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50"
+              className="rounded-lg border border-admin-input-border px-4 py-2 text-sm font-medium text-admin-text-secondary hover:bg-admin-surface-hover"
             >
               {t("startOver")}
             </button>
@@ -591,22 +591,22 @@ export function ImportForm() {
       {step === "done" && importState && (
         <div className="space-y-4">
           {importState.error && (
-            <div className="rounded-xl bg-white p-6 shadow-sm">
-              <p className="text-sm text-red-600">{importState.error}</p>
+            <div className="rounded-xl bg-admin-surface p-6 ring-1 ring-white/5">
+              <p className="text-sm text-red-400">{importState.error}</p>
             </div>
           )}
 
           {!importState.error && (
-            <div className="rounded-xl bg-white shadow-sm">
-              <div className="border-b border-gray-100 px-6 py-4">
-                <p className="text-sm font-medium text-gray-900">
+            <div className="rounded-xl bg-admin-surface ring-1 ring-white/5">
+              <div className="border-b border-admin-border-subtle px-6 py-4">
+                <p className="text-sm font-medium">
                   {t("done")} — {importState.summary}
                 </p>
-                <p className="text-xs text-gray-400">{importState.fileName}</p>
+                <p className="text-xs text-admin-text-muted">{importState.fileName}</p>
               </div>
 
               <table className="w-full text-left text-sm">
-                <thead className="border-b border-gray-100 text-xs uppercase text-gray-500">
+                <thead className="border-b border-admin-border text-xs uppercase text-admin-text-muted">
                   <tr>
                     <th className="px-6 py-2">{t("row")}</th>
                     <th className="px-6 py-2">{t("product")}</th>
@@ -614,11 +614,11 @@ export function ImportForm() {
                     <th className="px-6 py-2">{t("detail")}</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-50">
+                <tbody className="divide-y divide-admin-border-subtle">
                   {importState.plans.map((p) => (
                     <tr key={p.rowNumber}>
-                      <td className="px-6 py-2 text-gray-400">{p.rowNumber}</td>
-                      <td className="px-6 py-2 text-gray-900">{p.label}</td>
+                      <td className="px-6 py-2 text-admin-text-muted">{p.rowNumber}</td>
+                      <td className="px-6 py-2">{p.label}</td>
                       <td className="px-6 py-2">
                         <span
                           className={`rounded-full px-2 py-0.5 text-xs font-medium ${ACTION_BADGE[p.action]}`}
@@ -626,7 +626,7 @@ export function ImportForm() {
                           {t(ACTION_LABEL_KEY[p.action])}
                         </span>
                       </td>
-                      <td className="px-6 py-2 text-gray-500">{p.detail}</td>
+                      <td className="px-6 py-2 text-admin-text-muted">{p.detail}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -637,7 +637,7 @@ export function ImportForm() {
           <button
             type="button"
             onClick={resetForm}
-            className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50"
+            className="rounded-lg border border-admin-input-border px-4 py-2 text-sm font-medium text-admin-text-secondary hover:bg-admin-surface-hover"
           >
             {t("importAnother")}
           </button>

@@ -5,7 +5,7 @@ import { adjustStock } from "../../actions";
 import { useI18n } from "@/lib/i18n";
 
 const inputCls =
-  "rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-900 focus:border-blue-500 focus:outline-none";
+  "rounded-lg border border-admin-input-border bg-admin-input-bg px-3 py-1.5 text-sm text-admin-text focus:border-admin-accent focus:outline-none";
 
 export function StockAdjustForm({ itemId }: { itemId: string }) {
   const { t } = useI18n();
@@ -15,7 +15,7 @@ export function StockAdjustForm({ itemId }: { itemId: string }) {
     <form action={formAction} className="flex flex-wrap items-end gap-3">
       <input type="hidden" name="itemId" value={itemId} />
       <div>
-        <label className="mb-1 block text-xs text-gray-500">
+        <label className="mb-1 block text-xs text-admin-text-muted">
           {t("casesReceiveRemove")}
         </label>
         <input
@@ -27,7 +27,7 @@ export function StockAdjustForm({ itemId }: { itemId: string }) {
         />
       </div>
       <div>
-        <label className="mb-1 block text-xs text-gray-500">{t("reason")}</label>
+        <label className="mb-1 block text-xs text-admin-text-muted">{t("reason")}</label>
         <select name="reason" required defaultValue="RECEIVING" className={inputCls}>
           <option value="RECEIVING">{t("receiving")}</option>
           <option value="CORRECTION">{t("correction")}</option>
@@ -35,7 +35,7 @@ export function StockAdjustForm({ itemId }: { itemId: string }) {
         </select>
       </div>
       <div className="min-w-48 flex-1">
-        <label className="mb-1 block text-xs text-gray-500">{t("note")}</label>
+        <label className="mb-1 block text-xs text-admin-text-muted">{t("note")}</label>
         <input name="note" type="text" className={`${inputCls} w-full`} />
       </div>
       <button
@@ -46,12 +46,12 @@ export function StockAdjustForm({ itemId }: { itemId: string }) {
         {t("apply")}
       </button>
       {state && "error" in state && (
-        <p className="w-full text-sm text-red-600" role="alert">
+        <p className="w-full text-sm text-red-400" role="alert">
           {state.error}
         </p>
       )}
       {state && "success" in state && (
-        <p className="w-full text-sm text-green-600">{state.success}</p>
+        <p className="w-full text-sm text-emerald-400">{state.success}</p>
       )}
     </form>
   );

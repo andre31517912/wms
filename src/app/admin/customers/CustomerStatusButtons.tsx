@@ -24,7 +24,7 @@ export function CustomerStatusButtons({
           type="button"
           disabled={pending}
           onClick={() => set("APPROVED")}
-          className="rounded-lg bg-green-600 px-3 py-1 text-xs font-medium text-white hover:bg-green-700 disabled:opacity-50"
+          className="rounded-lg bg-emerald-600 px-3 py-1 text-xs font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
         >
           {status === "PENDING" ? t("approve") : t("enable")}
         </button>
@@ -34,7 +34,7 @@ export function CustomerStatusButtons({
           type="button"
           disabled={pending}
           onClick={() => set("DISABLED")}
-          className="rounded-lg border border-red-300 px-3 py-1 text-xs font-medium text-red-700 hover:bg-red-50 disabled:opacity-50"
+          className="rounded-lg border border-red-500/50 px-3 py-1 text-xs font-medium text-red-400 hover:bg-red-500/10 disabled:opacity-50"
         >
           {t("disable")}
         </button>

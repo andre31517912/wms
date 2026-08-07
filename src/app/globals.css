@@ -10,6 +10,19 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+
+  --color-admin-bg: #0f1117;
+  --color-admin-surface: #1a1d2e;
+  --color-admin-surface-hover: #232738;
+  --color-admin-border: #2a2d3e;
+  --color-admin-border-subtle: #1f2233;
+  --color-admin-text: #e8eaed;
+  --color-admin-text-secondary: #9ca3af;
+  --color-admin-text-muted: #6b7280;
+  --color-admin-input-bg: #1a1d2e;
+  --color-admin-input-border: #374151;
+  --color-admin-sidebar-bg: #141625;
+  --color-admin-accent: #3b82f6;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -23,4 +36,8 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+.admin-dark {
+  color-scheme: dark;
 }

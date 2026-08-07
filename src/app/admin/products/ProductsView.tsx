@@ -8,7 +8,7 @@ export function ProductsView({ products }: { products: ExplorerProduct[] }) {
 
   return (
     <div>
-      <h1 className="mb-6 text-2xl font-semibold text-gray-900">
+      <h1 className="mb-6 text-2xl font-semibold">
         {t("productsAndItems")}
       </h1>
       <ProductsExplorer products={products} />

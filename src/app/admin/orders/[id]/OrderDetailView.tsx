@@ -34,68 +34,68 @@ export function OrderDetailView({ order }: { order: OrderDetail }) {
 
   return (
     <div className="max-w-4xl">
-      <nav className="mb-4 text-sm text-gray-500">
-        <Link href="/admin/orders" className="text-blue-600 hover:underline">
+      <nav className="mb-4 text-sm text-admin-text-muted">
+        <Link href="/admin/orders" className="text-admin-accent hover:underline">
           {t("orders")}
         </Link>{" "}
         / {order.orderNumber}
       </nav>
 
       <div className="mb-6 flex flex-wrap items-center gap-3">
-        <h1 className="text-2xl font-semibold text-gray-900">
+        <h1 className="text-2xl font-semibold">
           {order.orderNumber}
         </h1>
         <OrderStatusBadge status={order.status} size="md" />
       </div>
 
       <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <div className="rounded-xl bg-white p-5 shadow-sm">
-          <p className="text-xs text-gray-400">{t("customer")}</p>
-          <p className="mt-0.5 font-medium text-gray-900">
+        <div className="rounded-xl bg-admin-surface p-5 ring-1 ring-white/5">
+          <p className="text-xs text-admin-text-muted">{t("customer")}</p>
+          <p className="mt-0.5 font-medium">
             {order.customer.name}
           </p>
-          <p className="text-xs text-gray-500">{order.customer.email}</p>
+          <p className="text-xs text-admin-text-muted">{order.customer.email}</p>
           <Link
             href={`/admin/orders?customer=${order.customer.id}`}
-            className="mt-1 inline-block text-xs text-blue-600 hover:underline"
+            className="mt-1 inline-block text-xs text-admin-accent hover:underline"
           >
             {t("orderHistory")}
           </Link>
         </div>
-        <div className="rounded-xl bg-white p-5 shadow-sm">
-          <p className="text-xs text-gray-400">{t("placed")}</p>
-          <p className="mt-0.5 text-gray-900">{order.createdAtLabel}</p>
-          <p className="mt-2 text-xs text-gray-400">{t("total")}</p>
-          <p className="text-gray-900">
+        <div className="rounded-xl bg-admin-surface p-5 ring-1 ring-white/5">
+          <p className="text-xs text-admin-text-muted">{t("placed")}</p>
+          <p className="mt-0.5">{order.createdAtLabel}</p>
+          <p className="mt-2 text-xs text-admin-text-muted">{t("total")}</p>
+          <p>
             {order.lines.length} {t("lines").toLowerCase()} · {totalCases}{" "}
             {t("cases").toLowerCase()}
           </p>
         </div>
-        <div className="rounded-xl bg-white p-5 shadow-sm">
-          <p className="mb-2 text-xs text-gray-400">{t("deliveryDate")}</p>
+        <div className="rounded-xl bg-admin-surface p-5 ring-1 ring-white/5">
+          <p className="mb-2 text-xs text-admin-text-muted">{t("deliveryDate")}</p>
           <DeliveryDateForm orderId={order.id} current={order.deliveryDateValue} />
         </div>
       </div>
 
       {order.note && (
-        <div className="mb-6 rounded-xl bg-amber-50 p-4 text-sm shadow-sm">
-          <p className="text-xs font-medium text-amber-700">
+        <div className="mb-6 rounded-xl bg-amber-500/10 p-4 text-sm ring-1 ring-amber-500/20">
+          <p className="text-xs font-medium text-amber-400">
             {t("customerNote")}
           </p>
-          <p className="mt-0.5 text-gray-800">{order.note}</p>
+          <p className="mt-0.5 text-admin-text">{order.note}</p>
         </div>
       )}
 
-      <div className="mb-6 rounded-xl bg-white p-5 shadow-sm">
-        <p className="mb-3 text-sm font-medium text-gray-700">
+      <div className="mb-6 rounded-xl bg-admin-surface p-5 ring-1 ring-white/5">
+        <p className="mb-3 text-sm font-medium text-admin-text-secondary">
           {t("updateStatus")}
         </p>
         <StatusControls orderId={order.id} status={order.status} />
       </div>
 
-      <div className="overflow-x-auto rounded-xl bg-white shadow-sm">
+      <div className="overflow-x-auto rounded-xl bg-admin-surface ring-1 ring-white/5">
         <table className="w-full text-left text-sm">
-          <thead className="border-b border-gray-200 text-xs uppercase text-gray-500">
+          <thead className="border-b border-admin-border text-xs uppercase text-admin-text-muted">
             <tr>
               <th className="px-4 py-3">{t("item")}</th>
               <th className="px-4 py-3">{t("sku")}</th>
@@ -104,30 +104,30 @@ export function OrderDetailView({ order }: { order: OrderDetail }) {
               <th className="px-4 py-3 text-right">{t("totalPieces")}</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100">
+          <tbody className="divide-y divide-admin-border-subtle">
             {order.lines.map((line) => (
-              <tr key={line.id}>
+              <tr key={line.id} className="hover:bg-admin-surface-hover">
                 <td className="px-4 py-3">
                   <Link
                     href={`/admin/items/${line.itemId}`}
-                    className="font-medium text-blue-700 hover:underline"
+                    className="font-medium text-admin-accent hover:underline"
                   >
                     {line.snapshotName}
                   </Link>
-                  <p className="text-xs text-gray-400">
+                  <p className="text-xs text-admin-text-muted">
                     {line.snapshotProductName}
                   </p>
                 </td>
-                <td className="px-4 py-3 font-mono text-xs text-gray-600">
+                <td className="px-4 py-3 font-mono text-xs text-admin-text-muted">
                   {line.snapshotSku ?? "—"}
                 </td>
-                <td className="px-4 py-3 text-right text-gray-600">
+                <td className="px-4 py-3 text-right text-admin-text-secondary">
                   {line.snapshotPiecesPerCase}
                 </td>
-                <td className="px-4 py-3 text-right font-medium text-gray-900">
+                <td className="px-4 py-3 text-right font-medium">
                   {line.qtyCases}
                 </td>
-                <td className="px-4 py-3 text-right text-gray-600">
+                <td className="px-4 py-3 text-right text-admin-text-secondary">
                   {(line.qtyCases * line.snapshotPiecesPerCase).toLocaleString()}
                 </td>
               </tr>

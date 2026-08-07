@@ -36,7 +36,7 @@ export function ItemPhotos({
   return (
     <div>
       {photos.length === 0 ? (
-        <p className="mb-3 text-sm text-gray-400">
+        <p className="mb-3 text-sm text-admin-text-muted">
           {t("noPhotosYet")}
         </p>
       ) : (
@@ -48,7 +48,7 @@ export function ItemPhotos({
                 <img
                   src={`/api/images/${photo.id}`}
                   alt=""
-                  className="h-32 w-32 rounded-lg border border-gray-200 object-cover"
+                  className="h-32 w-32 rounded-lg border border-admin-border object-cover"
                 />
                 {i === 0 && (
                   <span className="absolute left-1 top-1 rounded bg-blue-600 px-1.5 py-0.5 text-[10px] font-medium text-white">
@@ -64,7 +64,7 @@ export function ItemPhotos({
                     onClick={() =>
                       startTransition(() => makeMainItemImage(photo.id))
                     }
-                    className="text-xs text-blue-600 hover:underline disabled:opacity-50"
+                    className="text-xs text-admin-accent hover:underline disabled:opacity-50"
                   >
                     {t("makeMain")}
                   </button>
@@ -75,7 +75,7 @@ export function ItemPhotos({
                   onClick={() =>
                     startTransition(() => deleteItemImage(photo.id))
                   }
-                  className="text-xs text-red-600 hover:underline disabled:opacity-50"
+                  className="text-xs text-red-400 hover:underline disabled:opacity-50"
                 >
                   {t("delete_")}
                 </button>
@@ -93,7 +93,7 @@ export function ItemPhotos({
           accept="image/jpeg,image/png,image/webp,image/gif"
           multiple
           required
-          className="text-sm text-gray-700 file:mr-3 file:rounded-lg file:border-0 file:bg-gray-100 file:px-4 file:py-2 file:text-sm file:font-medium file:text-gray-700 hover:file:bg-gray-200"
+          className="text-sm text-admin-text-secondary file:mr-3 file:rounded-lg file:border-0 file:bg-admin-surface-hover file:px-4 file:py-2 file:text-sm file:font-medium file:text-admin-text hover:file:bg-admin-border"
         />
         <button
           type="submit"
@@ -102,16 +102,16 @@ export function ItemPhotos({
         >
           {uploading ? t("uploading") : t("upload")}
         </button>
-        <span className="text-xs text-gray-400">
+        <span className="text-xs text-admin-text-muted">
           {t("photoLimits")}
         </span>
         {state && "error" in state && (
-          <p className="w-full text-sm text-red-600" role="alert">
+          <p className="w-full text-sm text-red-400" role="alert">
             {state.error}
           </p>
         )}
         {state && "success" in state && (
-          <p className="w-full text-sm text-green-600">{state.success}</p>
+          <p className="w-full text-sm text-emerald-400">{state.success}</p>
         )}
       </form>
     </div>

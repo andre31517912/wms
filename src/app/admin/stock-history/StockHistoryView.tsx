@@ -58,40 +58,40 @@ export function StockHistoryView({
 
   return (
     <div>
-      <h1 className="mb-6 text-2xl font-bold text-gray-900">
+      <h1 className="mb-6 text-2xl font-bold">
         {t("globalStockHistory")}
       </h1>
 
       {/* Summary cards */}
-      <div className="mb-6 grid grid-cols-4 gap-4">
-        <div className="rounded-xl bg-white p-4 shadow-sm">
-          <p className="text-xs text-gray-500">{t("totalUnits")}</p>
-          <p className="text-2xl font-bold text-gray-900">
+      <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
+        <div className="rounded-xl bg-admin-surface p-4 ring-1 ring-white/5">
+          <p className="text-xs text-admin-text-muted">{t("totalUnits")}</p>
+          <p className="text-2xl font-bold">
             {warehouseUnits.toLocaleString()}
           </p>
         </div>
-        <div className="rounded-xl bg-white p-4 shadow-sm">
-          <p className="text-xs text-gray-500">{t("totalMovements")}</p>
-          <p className="text-2xl font-bold text-gray-900">{rows.length}</p>
+        <div className="rounded-xl bg-admin-surface p-4 ring-1 ring-white/5">
+          <p className="text-xs text-admin-text-muted">{t("totalMovements")}</p>
+          <p className="text-2xl font-bold">{rows.length}</p>
         </div>
-        <div className="rounded-xl bg-white p-4 shadow-sm">
-          <p className="text-xs text-gray-500">{t("totalIn")}</p>
-          <p className="text-2xl font-bold text-green-700">+{totalIn}</p>
+        <div className="rounded-xl bg-admin-surface p-4 ring-1 ring-white/5">
+          <p className="text-xs text-admin-text-muted">{t("totalIn")}</p>
+          <p className="text-2xl font-bold text-emerald-400">+{totalIn}</p>
         </div>
-        <div className="rounded-xl bg-white p-4 shadow-sm">
-          <p className="text-xs text-gray-500">{t("totalOut")}</p>
-          <p className="text-2xl font-bold text-red-700">{totalOut}</p>
+        <div className="rounded-xl bg-admin-surface p-4 ring-1 ring-white/5">
+          <p className="text-xs text-admin-text-muted">{t("totalOut")}</p>
+          <p className="text-2xl font-bold text-red-400">{totalOut}</p>
         </div>
       </div>
 
       {/* Filters */}
-      <div className="mb-4 flex flex-wrap items-end gap-3 rounded-xl bg-white p-4 shadow-sm">
+      <div className="mb-4 flex flex-wrap items-end gap-3 rounded-xl bg-admin-surface p-4 ring-1 ring-white/5">
         <div>
-          <label className="mb-1 block text-xs text-gray-500">
+          <label className="mb-1 block text-xs text-admin-text-muted">
             {t("reason")}
           </label>
           <select
-            className="rounded-md border border-gray-300 px-2 py-1.5 text-sm"
+            className="rounded-md border border-admin-input-border bg-admin-input-bg px-2 py-1.5 text-sm text-admin-text"
             value={searchParams.get("reason") ?? ""}
             onChange={(e) => setFilter("reason", e.target.value)}
           >
@@ -106,11 +106,11 @@ export function StockHistoryView({
         </div>
 
         <div>
-          <label className="mb-1 block text-xs text-gray-500">
+          <label className="mb-1 block text-xs text-admin-text-muted">
             {t("item")}
           </label>
           <select
-            className="rounded-md border border-gray-300 px-2 py-1.5 text-sm"
+            className="rounded-md border border-admin-input-border bg-admin-input-bg px-2 py-1.5 text-sm text-admin-text"
             value={searchParams.get("item") ?? ""}
             onChange={(e) => setFilter("item", e.target.value)}
           >
@@ -125,24 +125,24 @@ export function StockHistoryView({
         </div>
 
         <div>
-          <label className="mb-1 block text-xs text-gray-500">
+          <label className="mb-1 block text-xs text-admin-text-muted">
             {t("from")}
           </label>
           <input
             type="date"
-            className="rounded-md border border-gray-300 px-2 py-1.5 text-sm"
+            className="rounded-md border border-admin-input-border bg-admin-input-bg px-2 py-1.5 text-sm text-admin-text"
             value={searchParams.get("from") ?? ""}
             onChange={(e) => setFilter("from", e.target.value)}
           />
         </div>
 
         <div>
-          <label className="mb-1 block text-xs text-gray-500">
+          <label className="mb-1 block text-xs text-admin-text-muted">
             {t("to")}
           </label>
           <input
             type="date"
-            className="rounded-md border border-gray-300 px-2 py-1.5 text-sm"
+            className="rounded-md border border-admin-input-border bg-admin-input-bg px-2 py-1.5 text-sm text-admin-text"
             value={searchParams.get("to") ?? ""}
             onChange={(e) => setFilter("to", e.target.value)}
           />
@@ -152,7 +152,7 @@ export function StockHistoryView({
           <button
             type="button"
             onClick={clearAll}
-            className="rounded-md border border-gray-300 px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100"
+            className="rounded-md border border-admin-input-border px-3 py-1.5 text-sm text-admin-text-secondary hover:bg-admin-surface-hover"
           >
             {t("clear")}
           </button>
@@ -160,15 +160,15 @@ export function StockHistoryView({
       </div>
 
       {/* Table */}
-      <div className="rounded-xl bg-white shadow-sm">
+      <div className="rounded-xl bg-admin-surface ring-1 ring-white/5">
         {rows.length === 0 ? (
-          <p className="px-6 py-8 text-center text-sm text-gray-500">
+          <p className="px-6 py-8 text-center text-sm text-admin-text-muted">
             {t("noStockMovements")}
           </p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
-              <thead className="border-b border-gray-100 text-xs uppercase text-gray-500">
+              <thead className="border-b border-admin-border text-xs uppercase text-admin-text-muted">
                 <tr>
                   <th className="px-4 py-3">{t("when")}</th>
                   <th className="px-4 py-3">{t("product")}</th>
@@ -180,16 +180,16 @@ export function StockHistoryView({
                   <th className="px-4 py-3">{t("note")}</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-50">
+              <tbody className="divide-y divide-admin-border-subtle">
                 {rows.map((r) => (
-                  <tr key={r.id} className="hover:bg-gray-50">
-                    <td className="whitespace-nowrap px-4 py-2 text-gray-500">
+                  <tr key={r.id} className="hover:bg-admin-surface-hover">
+                    <td className="whitespace-nowrap px-4 py-2 text-admin-text-muted">
                       {new Date(r.createdAt).toLocaleString()}
                     </td>
-                    <td className="px-4 py-2 text-gray-600">
+                    <td className="px-4 py-2 text-admin-text-secondary">
                       {r.productName}
                     </td>
-                    <td className="px-4 py-2 font-medium text-gray-900">
+                    <td className="px-4 py-2 font-medium">
                       <a
                         href={`/admin/items/${r.itemId}`}
                         className="hover:underline"
@@ -197,21 +197,21 @@ export function StockHistoryView({
                         {r.itemName}
                       </a>
                     </td>
-                    <td className="px-4 py-2 text-gray-500">
+                    <td className="px-4 py-2 text-admin-text-muted">
                       {r.itemSku ?? "—"}
                     </td>
                     <td
-                      className={`px-4 py-2 font-medium ${r.deltaCases > 0 ? "text-green-700" : "text-red-700"}`}
+                      className={`px-4 py-2 font-medium ${r.deltaCases > 0 ? "text-emerald-400" : "text-red-400"}`}
                     >
                       {r.deltaCases > 0 ? `+${r.deltaCases}` : r.deltaCases}
                     </td>
-                    <td className="px-4 py-2 text-gray-600">
+                    <td className="px-4 py-2 text-admin-text-secondary">
                       {reasonLabel(r.reason)}
                     </td>
-                    <td className="px-4 py-2 text-gray-600">
+                    <td className="px-4 py-2 text-admin-text-secondary">
                       {r.byName ?? "—"}
                     </td>
-                    <td className="px-4 py-2 text-gray-500">
+                    <td className="px-4 py-2 text-admin-text-muted">
                       {r.note ?? ""}
                     </td>
                   </tr>

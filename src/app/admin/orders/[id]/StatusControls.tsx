@@ -42,7 +42,7 @@ export function StatusControls({
         value={selected}
         onChange={(e) => setSelected(e.target.value as OrderStatus)}
         disabled={pending}
-        className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-900 focus:border-blue-500 focus:outline-none"
+        className="rounded-lg border border-admin-input-border bg-admin-input-bg px-3 py-1.5 text-sm text-admin-text focus:border-admin-accent focus:outline-none"
       >
         <option value={status}>
           {t(ORDER_STATUS_LABEL[status])} {t("current")}
@@ -76,12 +76,12 @@ export function StatusControls({
       )}
 
       {cancelling && changed && !pending && (
-        <p className="text-xs text-amber-600">{t("cancellingNote")}</p>
+        <p className="text-xs text-amber-400">{t("cancellingNote")}</p>
       )}
       {reinstating && !pending && (
-        <p className="text-xs text-amber-600">{t("reinstatingNote")}</p>
+        <p className="text-xs text-amber-400">{t("reinstatingNote")}</p>
       )}
-      {error && <p className="w-full text-sm text-red-600">{error}</p>}
+      {error && <p className="w-full text-sm text-red-400">{error}</p>}
     </div>
   );
 }

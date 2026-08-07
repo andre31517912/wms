@@ -12,11 +12,11 @@ export const ORDER_STATUS_LABEL: Record<OrderStatus, TKey> = {
 };
 
 export const ORDER_STATUS_BADGE: Record<OrderStatus, string> = {
-  PENDING: "bg-amber-100 text-amber-800",
-  CONFIRMED: "bg-blue-100 text-blue-800",
-  OUT_FOR_DELIVERY: "bg-purple-100 text-purple-800",
-  DELIVERED: "bg-green-100 text-green-800",
-  CANCELLED: "bg-gray-200 text-gray-600",
+  PENDING: "bg-amber-500/20 text-amber-400",
+  CONFIRMED: "bg-blue-500/20 text-blue-400",
+  OUT_FOR_DELIVERY: "bg-purple-500/20 text-purple-400",
+  DELIVERED: "bg-emerald-500/20 text-emerald-400",
+  CANCELLED: "bg-gray-500/20 text-gray-400",
 };
 
 /**

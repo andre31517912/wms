@@ -34,9 +34,9 @@ export type ExplorerProduct = {
 };
 
 const LEVEL_BADGE = {
-  in_stock: "bg-green-100 text-green-800",
-  low: "bg-amber-100 text-amber-800",
-  out: "bg-red-100 text-red-800",
+  in_stock: "bg-emerald-500/20 text-emerald-400",
+  low: "bg-amber-500/20 text-amber-400",
+  out: "bg-red-500/20 text-red-400",
 } as const;
 
 const LEVEL_KEY: Record<keyof typeof LEVEL_BADGE, TKey> = {
@@ -46,7 +46,7 @@ const LEVEL_KEY: Record<keyof typeof LEVEL_BADGE, TKey> = {
 };
 
 const inputCls =
-  "rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-900 focus:border-blue-500 focus:outline-none";
+  "rounded-lg border border-admin-input-border bg-admin-input-bg px-3 py-1.5 text-sm text-admin-text focus:border-admin-accent focus:outline-none";
 
 export function ProductsExplorer({ products }: { products: ExplorerProduct[] }) {
   const { t } = useI18n();
@@ -97,7 +97,7 @@ export function ProductsExplorer({ products }: { products: ExplorerProduct[] }) 
         <button
           type="button"
           onClick={() => setShowAdd((s) => !s)}
-          className="rounded-lg border border-blue-600 px-4 py-1.5 text-sm font-medium text-blue-700 hover:bg-blue-50"
+          className="rounded-lg border border-admin-accent px-4 py-1.5 text-sm font-medium text-admin-accent hover:bg-admin-accent/10"
         >
           {showAdd ? t("close") : t("addProduct")}
         </button>
@@ -110,13 +110,13 @@ export function ProductsExplorer({ products }: { products: ExplorerProduct[] }) 
       </div>
 
       {showAdd && (
-        <div className="mb-4 rounded-xl bg-white p-4 shadow-sm">
+        <div className="mb-4 rounded-xl bg-admin-surface p-4 ring-1 ring-white/5">
           <NewProductForm onCreated={() => setShowAdd(false)} />
         </div>
       )}
 
       {visible.length === 0 ? (
-        <p className="text-sm text-gray-500">
+        <p className="text-sm text-admin-text-muted">
           {searching ? t("noSearchMatch") : t("noProductsYet")}
         </p>
       ) : (
@@ -150,11 +150,11 @@ function NewProductForm({ onCreated }: { onCreated: () => void }) {
   return (
     <form action={formAction} className="flex flex-wrap items-end gap-3">
       <div>
-        <label className="mb-1 block text-xs text-gray-500">{t("name")}</label>
+        <label className="mb-1 block text-xs text-admin-text-muted">{t("name")}</label>
         <input name="name" type="text" required className={`${inputCls} w-64`} />
       </div>
       <div>
-        <label className="mb-1 block text-xs text-gray-500">{t("sortOrder")}</label>
+        <label className="mb-1 block text-xs text-admin-text-muted">{t("sortOrder")}</label>
         <input
           name="sortOrder"
           type="number"
@@ -171,7 +171,7 @@ function NewProductForm({ onCreated }: { onCreated: () => void }) {
         {t("add")}
       </button>
       {state && "error" in state && (
-        <p className="w-full text-sm text-red-600">{state.error}</p>
+        <p className="w-full text-sm text-red-400">{state.error}</p>
       )}
     </form>
   );
@@ -212,12 +212,12 @@ function ProductSection({
   };
 
   return (
-    <div className="rounded-xl bg-white shadow-sm">
+    <div className="rounded-xl bg-admin-surface ring-1 ring-white/5">
       <div className="flex items-center justify-between px-4 py-3">
         {editing ? (
           <form action={formAction} className="flex flex-1 flex-wrap items-end gap-3">
             <div>
-              <label className="mb-1 block text-xs text-gray-500">{t("name")}</label>
+              <label className="mb-1 block text-xs text-admin-text-muted">{t("name")}</label>
               <input
                 name="name"
                 type="text"
@@ -227,7 +227,7 @@ function ProductSection({
               />
             </div>
             <div>
-              <label className="mb-1 block text-xs text-gray-500">{t("sort")}</label>
+              <label className="mb-1 block text-xs text-admin-text-muted">{t("sort")}</label>
               <input
                 name="sortOrder"
                 type="number"
@@ -246,12 +246,12 @@ function ProductSection({
             <button
               type="button"
               onClick={() => setEditing(false)}
-              className="rounded-lg border border-gray-300 px-4 py-1.5 text-sm text-gray-700 hover:bg-gray-100"
+              className="rounded-lg border border-admin-input-border px-4 py-1.5 text-sm text-admin-text-secondary hover:bg-admin-surface-hover"
             >
               {t("cancel")}
             </button>
             {state && "error" in state && (
-              <p className="w-full text-sm text-red-600">{state.error}</p>
+              <p className="w-full text-sm text-red-400">{state.error}</p>
             )}
           </form>
         ) : (
@@ -261,23 +261,23 @@ function ProductSection({
             className="flex flex-1 items-center gap-3 text-left"
           >
             <span
-              className={`text-gray-400 transition-transform ${open ? "rotate-90" : ""}`}
+              className={`text-admin-text-muted transition-transform ${open ? "rotate-90" : ""}`}
             >
               ▶
             </span>
-            <span className="font-medium text-gray-900">{product.name}</span>
-            <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600">
+            <span className="font-medium">{product.name}</span>
+            <span className="rounded-full bg-admin-surface-hover px-2 py-0.5 text-xs text-admin-text-secondary">
               {t("nItemsCount", { n: product.items.length })}
             </span>
           </button>
         )}
         {!editing && (
           <span className="ml-3 inline-flex items-center gap-2">
-            {error && <span className="text-xs text-red-600">{error}</span>}
+            {error && <span className="text-xs text-red-400">{error}</span>}
             <button
               type="button"
               onClick={() => setEditing(true)}
-              className="rounded-lg border border-gray-300 px-3 py-1 text-xs text-gray-700 hover:bg-gray-100"
+              className="rounded-lg border border-admin-input-border px-3 py-1 text-xs text-admin-text-secondary hover:bg-admin-surface-hover"
             >
               {t("edit")}
             </button>
@@ -290,7 +290,7 @@ function ProductSection({
                   ? t("moveOrDeleteFirst")
                   : undefined
               }
-              className="rounded-lg border border-red-300 px-3 py-1 text-xs text-red-700 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-40"
+              className="rounded-lg border border-red-500/50 px-3 py-1 text-xs text-red-400 hover:bg-red-500/10 disabled:cursor-not-allowed disabled:opacity-40"
             >
               {t("delete_")}
             </button>
@@ -299,14 +299,14 @@ function ProductSection({
       </div>
 
       {open && (
-        <div className="border-t border-gray-100">
+        <div className="border-t border-admin-border-subtle">
           {items.length === 0 ? (
-            <p className="px-4 py-3 text-sm text-gray-400">
+            <p className="px-4 py-3 text-sm text-admin-text-muted">
               {t("noItemsUnderProduct")}
             </p>
           ) : (
             <table className="w-full text-left text-sm">
-              <thead className="border-b border-gray-100 text-xs uppercase text-gray-500">
+              <thead className="border-b border-admin-border-subtle text-xs uppercase text-admin-text-muted">
                 <tr>
                   <th className="px-4 py-2">{t("sku")}</th>
                   <th className="px-4 py-2">{t("item")}</th>
@@ -317,35 +317,35 @@ function ProductSection({
                   <th className="px-4 py-2">{t("status")}</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-50">
+              <tbody className="divide-y divide-admin-border-subtle">
                 {items.map((item) => {
                   const level = stockLevel(item.stockCases, item.lowStockThreshold);
                   return (
-                    <tr key={item.id} className={item.isActive ? "" : "opacity-50"}>
-                      <td className="px-4 py-2 font-mono text-xs text-gray-600">
+                    <tr key={item.id} className={`hover:bg-admin-surface-hover ${item.isActive ? "" : "opacity-50"}`}>
+                      <td className="px-4 py-2 font-mono text-xs text-admin-text-muted">
                         {item.sku ?? "—"}
                       </td>
                       <td className="px-4 py-2">
                         <Link
                           href={`/admin/items/${item.id}`}
-                          className="font-medium text-blue-700 hover:underline"
+                          className="font-medium text-admin-accent hover:underline"
                         >
                           {item.name}
                         </Link>
                         {item.detail && (
-                          <p className="text-xs text-gray-400">{item.detail}</p>
+                          <p className="text-xs text-admin-text-muted">{item.detail}</p>
                         )}
                       </td>
-                      <td className="px-4 py-2 text-right text-gray-600">
+                      <td className="px-4 py-2 text-right text-admin-text-secondary">
                         {item.piecesPerCase}
                       </td>
-                      <td className="px-4 py-2 text-right text-gray-600 whitespace-nowrap">
+                      <td className="px-4 py-2 text-right text-admin-text-secondary whitespace-nowrap">
                         {formatDims(item.caseLengthCm, item.caseWidthCm, item.caseHeightCm)}
                       </td>
-                      <td className="px-4 py-2 text-right text-gray-600">
+                      <td className="px-4 py-2 text-right text-admin-text-secondary">
                         {item.minOrderCases}
                       </td>
-                      <td className="px-4 py-2 text-right font-medium text-gray-900">
+                      <td className="px-4 py-2 text-right font-medium">
                         {item.stockCases}
                       </td>
                       <td className="px-4 py-2">
