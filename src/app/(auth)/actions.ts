@@ -11,6 +11,7 @@ import {
 } from "@/lib/auth";
 import { loginSchema, registerSchema } from "@/lib/validation";
 import { Prisma } from "@/generated/prisma/client";
+import { notifyPendingRegistration } from "@/lib/email";
 
 export type AuthFormState = { error: string } | null;
 
@@ -36,6 +37,7 @@ export async function register(
       data: { name, email, passwordHash },
     });
     userId = user.id;
+    notifyPendingRegistration(name, email).catch(() => {});
   } catch (e) {
     if (
       e instanceof Prisma.PrismaClientKnownRequestError &&
